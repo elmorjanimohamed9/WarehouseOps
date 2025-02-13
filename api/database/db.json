@@ -1,0 +1,240 @@
+{
+  "products": [
+    {
+      "id": "1",
+      "name": "Laptop HP Pavilion",
+      "type": "Informatique",
+      "barcode": "1234567890123",
+      "price": 1200,
+      "solde": 1100,
+      "supplier": "HP",
+      "image": "https://mediazone.ma/uploads/images/products/16412/landing-page/assets/images/swiper-1.png",
+      "stocks": [
+        {
+          "id": 1999,
+          "name": "Gueliz B2",
+          "quantity": 21,
+          "localisation": {
+            "city": "Marrakesh",
+            "latitude": 31.628674,
+            "longitude": -7.992047
+          }
+        },
+        {
+          "id": 2991,
+          "name": "Lazari H2",
+          "quantity": 24,
+          "localisation": {
+            "city": "Oujda",
+            "latitude": 34.689404,
+            "longitude": -1.912823
+          }
+        }
+      ],
+      "editedBy": [
+        {
+          "warehousemanId": 1333,
+          "at": "2025-02-02"
+        }
+      ]
+    },
+    {
+      "id": "2",
+      "name": "Clavier Mécanique Logitech",
+      "type": "Accessoires",
+      "barcode": "9876543210987",
+      "price": 100,
+      "supplier": "Logitech",
+      "image": "https://in-media.apjonlinecdn.com/catalog/product/cache/b3b166914d87ce343d4dc5ec5117b502/8/a/8aa01aa.png",
+      "stocks": [
+        {
+          "id": 1999,
+          "name": "Gueliz B2",
+          "quantity": 20,
+          "localisation": {
+            "city": "Marrakesh",
+            "latitude": 31.628674,
+            "longitude": -7.992047
+          }
+        },
+        {
+          "id": 2991,
+          "name": "Lazari H2",
+          "quantity": 5,
+          "localisation": {
+            "city": "Oujda",
+            "latitude": 34.689404,
+            "longitude": -1.912823
+          }
+        }
+      ],
+      "editedBy": [
+        {
+          "warehousemanId": 1444,
+          "at": "2025-02-02"
+        }
+      ]
+    },
+    {
+      "id": "3",
+      "name": "Pc Gamer Omen By HP",
+      "type": "Informatique",
+      "barcode": "1236543210987",
+      "price": 11000,
+      "supplier": "HP",
+      "image": "https://technoplace.ma/11482-large_default/hp-omen-17-i7-7700hq-173-16gb-2tb-geforce-gtx-10.jpg",
+      "stocks": [],
+      "editedBy": [
+        {
+          "warehousemanId": 1444,
+          "at": "2025-02-02"
+        }
+      ]
+    },
+    {
+      "id": "4",
+      "name": "MacBook Pro M3",
+      "type": "Informatique",
+      "barcode": "4567891234567",
+      "price": 25000,
+      "solde": 23500,
+      "supplier": "Apple",
+      "image": "https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/mbp14-spacegray-select-202310?wid=904&hei=840&fmt=jpeg&qlt=95&.v=1697311054290",
+      "stocks": [
+        {
+          "id": 1999,
+          "name": "Gueliz B2",
+          "quantity": 8,
+          "localisation": {
+            "city": "Marrakesh",
+            "latitude": 31.628674,
+            "longitude": -7.992047
+          }
+        }
+      ],
+      "editedBy": [
+        {
+          "warehousemanId": 1333,
+          "at": "2025-02-12"
+        }
+      ]
+    },
+    {
+      "id": "5",
+      "name": "AirPods Pro 2",
+      "type": "Accessoires",
+      "barcode": "7891234567890",
+      "price": 3000,
+      "supplier": "Apple",
+      "image": "https://store.storeimages.cdn-apple.com/4668/as-images.apple.com/is/MQD83?wid=1144&hei=1144&fmt=jpeg&qlt=90&.v=1660803972361",
+      "stocks": [
+        {
+          "id": 2991,
+          "name": "Lazari H2",
+          "quantity": 15,
+          "localisation": {
+            "city": "Oujda",
+            "latitude": 34.689404,
+            "longitude": -1.912823
+          }
+        }
+      ],
+      "editedBy": [
+        {
+          "warehousemanId": 1444,
+          "at": "2025-02-12"
+        }
+      ]
+    },
+    {
+      "id": "6",
+      "name": "Samsung S24 Ultra",
+      "type": "Smartphone",
+      "barcode": "6543217890123",
+      "price": 15000,
+      "solde": 14200,
+      "supplier": "Samsung",
+      "image": "https://images.samsung.com/is/image/samsung/p6pim/n_africa/2501/gallery/n-africa-galaxy-s25-s938-sm-s938bzbomwd-thumb-544713215?$310_N_PNG$",
+      "stocks": [
+        {
+          "id": 1999,
+          "name": "Gueliz B2",
+          "quantity": 10,
+          "localisation": {
+            "city": "Marrakesh",
+            "latitude": 31.628674,
+            "longitude": -7.992047
+          }
+        },
+        {
+          "id": 2991,
+          "name": "Lazari H2",
+          "quantity": 12,
+          "localisation": {
+            "city": "Oujda",
+            "latitude": 34.689404,
+            "longitude": -1.912823
+          }
+        }
+      ],
+      "editedBy": [
+        {
+          "warehousemanId": 1444,
+          "at": "2025-02-12"
+        }
+      ]
+    },
+    {
+      "id": "7",
+      "name": "PlayStation 5",
+      "type": "Gaming",
+      "barcode": "9876543210123",
+      "price": 5500,
+      "supplier": "Sony",
+      "image": "https://gmedia.playstation.com/is/image/SIEPDC/ps5-product-thumbnail-01-en-14sep21?$facebook$",
+      "stocks": [
+        {
+          "id": 1999,
+          "name": "Gueliz B2",
+          "quantity": 5,
+          "localisation": {
+            "city": "Marrakesh",
+            "latitude": 31.628674,
+            "longitude": -7.992047
+          }
+        }
+      ],
+      "editedBy": [
+        {
+          "warehousemanId": 1333,
+          "at": "2025-02-12"
+        }
+      ]
+    }
+  ],
+  "warehousemans": [
+    {
+      "id": "1333",
+      "name": "Amine Boutaleb",
+      "dob": "1988-05-02",
+      "city": "Oujda",
+      "secretKey": "AH90907J",
+      "warehouseId": 1999
+    },
+    {
+      "id": "1444",
+      "name": "Karim El Mansouri",
+      "dob": "1990-09-15",
+      "city": "Marrakesh",
+      "secretKey": "RK189987A",
+      "warehouseId": 2991
+    }
+  ],
+  "statistics": {
+    "totalProducts": 7,
+    "outOfStock": 1,
+    "totalStockValue": 160,
+    "mostAddedProducts": [],
+    "mostRemovedProducts": []
+  }
+}
