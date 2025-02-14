@@ -37,7 +37,6 @@ const LoadingScreen = () => {
     }]
   }));
 
-  // Pulse animation for the title
   const titleStyle = useAnimatedStyle(() => ({
     opacity: withRepeat(
       withSequence(
@@ -67,27 +66,27 @@ const LoadingScreen = () => {
         <Animated.View style={[{
           width: 100,
           height: '100%',
-          backgroundColor: '#EAB308', // yellow-500
+          backgroundColor: '#EAB308', 
           opacity: 0.7
         }, barStyle]} />
       </View>
 
       <Animated.View style={iconStyle}>
-        <Package color="#EAB308" size={64} /> {/* yellow-500 */}
+        <Package color="#EAB308" size={64} /> 
       </Animated.View>
       
       <Animated.Text style={[{ 
-        color: '#422006', // yellow-900
+        color: '#EAB308', 
         fontSize: 28,
         fontWeight: '600',
-        marginTop: 24,
+        marginTop: 8,
         letterSpacing: 1
       }, titleStyle]}>
         WarehouseOps
       </Animated.Text>
       
       <Text style={{ 
-        color: '#854D0E', // yellow-800
+        color: '#854D0E', 
         marginTop: 12,
         fontSize: 16,
         letterSpacing: 0.5
@@ -95,7 +94,6 @@ const LoadingScreen = () => {
         Loading...
       </Text>
 
-      {/* Subtle shadow under the icon */}
       <View style={{
         position: 'absolute',
         shadowColor: '#EAB308',

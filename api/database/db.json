@@ -215,6 +215,7 @@
   "warehousemans": [
     {
       "id": "1333",
+      "image": "https://images.unsplash.com/photo-1607990281513-2c110a25bd8c?w=400&h=400&fit=crop",
       "name": "Amine Boutaleb",
       "dob": "1988-05-02",
       "city": "Oujda",
@@ -223,6 +224,7 @@
     },
     {
       "id": "1444",
+      "image": "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=400&h=400&fit=crop",
       "name": "Karim El Mansouri",
       "dob": "1990-09-15",
       "city": "Marrakesh",

@@ -24,9 +24,9 @@ const Input = ({
   ...props
 }: InputProps) => {
   return (
-    <View className={`bg-white flex-row items-center px-4 py-1 rounded-full ${containerClassName}`}>
+    <View className={`bg-white flex-row items-center px-4 rounded-xl ${containerClassName}`}>
       {LeftIcon && (
-        <LeftIcon color="#9CA3AF" size={20} />
+        <LeftIcon color="#eab308" size={16} />
       )}
       <TextInput
         className={`flex-1 ml-2 text-gray-900 ${inputClassName}`}
