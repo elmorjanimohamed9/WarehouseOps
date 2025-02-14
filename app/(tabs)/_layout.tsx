@@ -1,10 +1,13 @@
-import { Tabs } from 'expo-router';
+import { Tabs, usePathname } from 'expo-router';
 import React from 'react';
 import { View } from 'react-native';
-import { Home, BarChart2, Scan, Search, Settings } from 'lucide-react-native';
+import { Home, BarChart2, Scan, Package, Settings } from 'lucide-react-native';
 import '../../global.css'
 
 const TabLayout = () => {
+  const pathname = usePathname();
+  const isAddProductPage = pathname.includes('/products/add');
+
   return (
     <Tabs
       screenOptions={{
@@ -21,23 +24,27 @@ const TabLayout = () => {
           height: 60,
           paddingBottom: 10,
           zIndex: 1,
+          display: isAddProductPage ? 'none' : 'flex'
         },
         tabBarActiveTintColor: '#eab308',
         tabBarInactiveTintColor: '#9ca3af',
       }}
     >
+
       <Tabs.Screen
-        name="products/home"
+        name="home"
         options={{
           title: 'Home',
+          headerShown: false,
           tabBarIcon: ({ color }) => <Home size={24} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="search"
+        name="products"
         options={{
-          title: 'Search',
-          tabBarIcon: ({ color }) => <Search size={24} color={color} />,
+          title: 'Products',
+          headerShown: false,
+          tabBarIcon: ({ color }) => <Package size={24} color={color} />,
         }}
       />
       <Tabs.Screen
@@ -46,8 +53,8 @@ const TabLayout = () => {
           title: 'Scan',
           tabBarLabel: () => null,
           tabBarIcon: ({ color }) => (
-            <View style={{ 
-              backgroundColor: '#eab308', 
+            <View style={{
+              backgroundColor: '#eab308',
               borderRadius: 30,
               padding: 12,
               marginBottom: 20,
@@ -68,6 +75,7 @@ const TabLayout = () => {
         name="settings"
         options={{
           title: 'Settings',
+          headerShown: false,
           tabBarIcon: ({ color }) => <Settings size={24} color={color} />,
         }}
       />

@@ -1,217 +1,245 @@
-import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  TextInput, 
-  TouchableOpacity, 
-  ScrollView, 
-  Alert, 
+import React, { useState, useCallback } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  Alert,
   ActivityIndicator,
   SafeAreaView,
   KeyboardAvoidingView,
   Platform,
-  Image
-} from 'react-native';
-import { 
-  Package, 
-  DollarSign, 
-  Building2, 
-  Barcode, 
-  Archive, 
+  Image,
+  StatusBar,
+} from "react-native";
+import {
+  Package,
+  DollarSign,
+  Building2,
+  Barcode,
+  Archive,
   ArrowLeft,
   Warehouse,
   MapPin,
   ChevronRight,
-  Camera
-} from 'lucide-react-native';
-import { useRouter } from 'expo-router';
-import * as ImagePicker from 'expo-image-picker';
+  Camera,
+  X,
+} from "lucide-react-native";
+import { useRouter } from "expo-router";
+import * as ImagePicker from "expo-image-picker";
+import { BlurView } from "expo-blur";
+import { LoadingSpinner } from "@/components/common/LoadingSpinner";
+import { ErrorMessage } from "@/components/common/ErrorMessage";
+import { Product } from "@/types/product";
+import Input from "@/components/common/Input";
+import { useProducts } from '@/hooks/useProducts';
+
+interface FormData {
+  name: string;
+  type: string;
+  barcode: string;
+  price: string;
+  supplier: string;
+  image: string;
+  quantity: string;
+  warehouse: string;
+}
+
+const INITIAL_FORM_STATE: FormData = {
+  name: "",
+  type: "",
+  barcode: "",
+  price: "",
+  supplier: "",
+  image: "",
+  quantity: "",
+  warehouse: "",
+};
+
+const PRODUCT_TYPES = ["Informatique", "Accessoires", "Smartphone", "Gaming"];
+
+const WAREHOUSES = [
+  { id: "1999", name: "Gueliz B2", city: "Marrakesh" },
+  { id: "2991", name: "Lazari H2", city: "Oujda" },
+];
 
 const AddProductPage = () => {
   const router = useRouter();
+  const { addProduct } = useProducts();
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [formData, setFormData] = useState({
-    name: '',
-    type: '',
-    barcode: '',
-    price: '',
-    supplier: '',
-    image: '',
-    quantity: '',
-    warehouse: ''
-  });
+  const [formData, setFormData] = useState<FormData>(INITIAL_FORM_STATE);
+  const [imageLoading, setImageLoading] = useState(false);
 
-  const productTypes = ['Informatique', 'Accessoires', 'Smartphone', 'Gaming'];
-  const warehouses = [
-    { id: '1999', name: 'Gueliz B2', city: 'Marrakesh' },
-    { id: '2991', name: 'Lazari H2', city: 'Oujda' }
-  ];
+  const updateFormField = useCallback(
+    (field: keyof FormData, value: string) => {
+      setFormData((prev) => ({ ...prev, [field]: value }));
+      setErrors((prev) => ({ ...prev, [field]: "" }));
+    },
+    []
+  );
 
   const pickImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    
-    if (status !== 'granted') {
-      Alert.alert('Permission needed', 'Please grant permission to access your photos');
-      return;
-    }
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
+      if (status !== "granted") {
+        Alert.alert(
+          "Permission Required",
+          "Please grant permission to access your photo library"
+        );
+        return;
+      }
 
-    if (!result.canceled) {
-      setFormData(prev => ({ ...prev, image: result.assets[0].uri }));
+      setImageLoading(true);
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+
+      if (!result.canceled) {
+        updateFormField("image", result.assets[0].uri);
+      }
+    } catch (error) {
+      Alert.alert("Error", "Failed to pick image");
+    } finally {
+      setImageLoading(false);
     }
   };
 
-  const validateForm = () => {
+  const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.name.trim()) newErrors.name = 'Product name is required';
-    if (!formData.type) newErrors.type = 'Product type is required';
-    if (!formData.barcode.trim()) newErrors.barcode = 'Barcode is required';
-    if (!formData.price.trim()) newErrors.price = 'Price is required';
+    if (!formData.name.trim()) newErrors.name = "Product name is required";
+    if (!formData.type) newErrors.type = "Product type is required";
+    if (!formData.barcode.trim()) newErrors.barcode = "Barcode is required";
+    if (!formData.price.trim()) newErrors.price = "Price is required";
     else if (isNaN(Number(formData.price)) || Number(formData.price) <= 0) {
-      newErrors.price = 'Please enter a valid price';
+      newErrors.price = "Please enter a valid price";
     }
-    if (!formData.supplier.trim()) newErrors.supplier = 'Supplier is required';
-    if (!formData.quantity.trim()) newErrors.quantity = 'Quantity is required';
+    if (!formData.supplier.trim()) newErrors.supplier = "Supplier is required";
+    if (!formData.quantity.trim()) newErrors.quantity = "Quantity is required";
     else if (isNaN(Number(formData.quantity)) || Number(formData.quantity) < 0) {
-      newErrors.quantity = 'Please enter a valid quantity';
+      newErrors.quantity = "Please enter a valid quantity";
     }
-    if (!formData.warehouse) newErrors.warehouse = 'Please select a warehouse';
+    if (!formData.warehouse) newErrors.warehouse = "Please select a warehouse";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async () => {
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      Alert.alert("Error", "Please check all required fields");
+      return;
+    }
 
     setLoading(true);
     try {
-      const selectedWarehouse = warehouses.find(w => w.id === formData.warehouse);
-      const newProduct = {
-        id: Date.now(),
+      const selectedWarehouse = WAREHOUSES.find(
+        (w) => w.id === formData.warehouse
+      );
+
+      const newProduct: Partial<Product> = {
+        id: Date.now().toString(),
         name: formData.name.trim(),
         type: formData.type,
         barcode: formData.barcode.trim(),
         price: Number(formData.price),
         supplier: formData.supplier.trim(),
-        image: formData.image || 'https://placehold.co/600x400?text=No+Image',
-        stocks: [{
-          id: Number(formData.warehouse),
-          name: selectedWarehouse?.name || '',
-          quantity: Number(formData.quantity),
-          localisation: {
-            city: selectedWarehouse?.city || '',
-            latitude: 0,
-            longitude: 0
-          }
-        }],
-        editedBy: [{
-          warehousemanId: 1333,
-          at: new Date().toISOString()
-        }]
+        image: formData.image || "https://placehold.co/600x400?text=No+Image",
+        stocks: [
+          {
+            id: Number(formData.warehouse),
+            name: selectedWarehouse?.name || "",
+            quantity: Number(formData.quantity),
+            localisation: {
+              city: selectedWarehouse?.city || "",
+              latitude: 0,
+              longitude: 0,
+            },
+          },
+        ],
+        editedBy: [
+          {
+            warehousemanId: 1333,
+            at: new Date().toISOString(),
+          },
+        ],
       };
 
-      const response = await fetch('http://172.16.11.195:3000/products', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newProduct)
-      });
-
-      if (!response.ok) throw new Error('Failed to add product');
-
-      Alert.alert('Success', 'Product added successfully', [
-        { text: 'OK', onPress: () => router.back() }
+      await addProduct(newProduct);
+      Alert.alert("Success", "Product added successfully", [
+        { text: "OK", onPress: () => router.back() },
       ]);
     } catch (error) {
-      Alert.alert('Error', 'Failed to add product');
+      Alert.alert("Error", "Failed to add product. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  const InputField = ({ 
-    icon: Icon, 
-    label,
-    placeholder, 
-    value, 
-    onChangeText,
-    keyboardType = 'default',
-    error
-  }: {
-    icon: any,
-    label: string,
-    placeholder: string,
-    value: string,
-    onChangeText: (text: string) => void,
-    keyboardType?: 'default' | 'numeric',
-    error?: string
-  }) => (
-    <View className="mb-4">
-      <Text className="text-gray-700 text-sm mb-2">{label}</Text>
-      <View className={`flex-row items-center bg-gray-100 rounded-xl px-4 py-3 ${
-        error ? 'border border-red-500' : ''
-      }`}>
-        <Icon size={20} color={error ? '#EF4444' : '#6B7280'} />
-        <TextInput
-          className="flex-1 ml-3 text-gray-900"
-          placeholder={placeholder}
-          placeholderTextColor="#9CA3AF"
-          value={value}
-          onChangeText={onChangeText}
-          keyboardType={keyboardType}
-        />
-      </View>
-      {error && (
-        <Text className="text-red-500 text-xs mt-1 ml-1">{error}</Text>
-      )}
-    </View>
-  );
-
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
+      <StatusBar barStyle="dark-content" />
+
       {/* Header */}
       <View className="bg-yellow-500 px-6 py-4">
         <View className="flex-row items-center justify-between">
-          <TouchableOpacity 
+          <TouchableOpacity
             onPress={() => router.back()}
             className="w-10 h-10 bg-yellow-400 rounded-full items-center justify-center"
           >
-            <ArrowLeft color="white" size={24} />
+            <ArrowLeft color="#f9fafb" size={24} />
           </TouchableOpacity>
-          <Text className="text-white text-lg font-bold">Add New Product</Text>
+          <Text className="text-white text-lg font-bold">
+            Add New Product
+          </Text>
           <View className="w-10" />
         </View>
       </View>
 
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 24}
       >
-        <ScrollView className="flex-1 p-6">
-          {/* Product Image */}
-          <View className="items-center mb-6">
-            <TouchableOpacity 
+        <ScrollView
+          className="flex-1 px-6 mb-16"
+          showsVerticalScrollIndicator={false}
+          >
+          {/* Image Picker */}
+          <View className="items-center my-6">
+            <TouchableOpacity
               onPress={pickImage}
-              className="w-32 h-32 bg-gray-200 rounded-2xl items-center justify-center mb-2"
+              disabled={imageLoading}
+              className="w-40 h-40 bg-white rounded-3xl items-center justify-center border border-yellow-500 overflow-hidden"
             >
-              {formData.image ? (
-                <Image 
-                  source={{ uri: formData.image }} 
-                  className="w-full h-full rounded-2xl"
-                  resizeMode="cover"
-                />
+              {imageLoading ? (
+                <LoadingSpinner />
+              ) : formData.image ? (
+                <View className="relative w-full h-full">
+                  <Image
+                    source={{ uri: formData.image }}
+                    className="w-full h-full"
+                    resizeMode="cover"
+                  />
+                  <TouchableOpacity
+                    onPress={() => updateFormField("image", "")}
+                    className="absolute top-2 right-2 w-8 h-8 bg-yellow-500 rounded-full items-center justify-center"
+                  >
+                    <X size={16} color="white" />
+                  </TouchableOpacity>
+                </View>
               ) : (
                 <View className="items-center">
-                  <Camera size={48} color="#9CA3AF" />
-                  <Text className="text-gray-500 text-sm mt-2">Add Photo</Text>
+                  <Camera size={48} color="#eab308" />
+                  <Text className="text-gray-500 text-sm mt-2">
+                    Add Product Photo
+                  </Text>
                 </View>
               )}
             </TouchableOpacity>
@@ -219,158 +247,193 @@ const AddProductPage = () => {
 
           {/* Product Type Selection */}
           <View className="mb-6">
-            <Text className="text-gray-700 text-sm mb-2">Product Type</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {productTypes.map((type) => (
+            <Text className="text-gray-700 font-medium mb-2">Product Type</Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingRight: 20 }}
+            >
+              {PRODUCT_TYPES.map((type) => (
                 <TouchableOpacity
                   key={type}
-                  onPress={() => {
-                    setFormData({ ...formData, type });
-                    setErrors({ ...errors, type: '' });
-                  }}
-                  className={`mr-2 px-4 py-2 rounded-full border ${
-                    formData.type === type 
-                      ? 'bg-yellow-500 border-yellow-500' 
-                      : 'bg-white border-gray-200'
+                  onPress={() => updateFormField("type", type)}
+                  className={`mr-3 px-6 py-3 rounded-xl border ${
+                    formData.type === type
+                      ? "bg-yellow-500 border-yellow-500"
+                      : "bg-white border-gray-100"
                   }`}
                 >
-                  <Text 
-                    className={formData.type === type ? 'text-white' : 'text-gray-700'}
+                  <Text
+                    className={`${
+                      formData.type === type ? "text-white" : "text-gray-700"
+                    } font-medium`}
                   >
                     {type}
                   </Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
-            {errors.type && (
-              <Text className="text-red-500 text-xs mt-1 ml-1">{errors.type}</Text>
-            )}
+            {errors.type && <ErrorMessage message={errors.type} />}
           </View>
 
           {/* Form Fields */}
-          <InputField
-            icon={Package}
-            label="Product Name"
-            placeholder="Enter product name"
-            value={formData.name}
-            onChangeText={(text) => {
-              setFormData({ ...formData, name: text });
-              setErrors({ ...errors, name: '' });
-            }}
-            error={errors.name}
-          />
+          <View className="space-y-4">
+            <View>
+              <Text className="text-gray-700 font-medium mb-2">Product Name</Text>
+              <Input
+                leftIcon={Package}
+                placeholder="Enter product name"
+                value={formData.name}
+                onChangeText={(text) => updateFormField("name", text)}
+                containerClassName={`border ${
+                  errors.name ? "border-red-500" : "border-gray-100"
+                } py-1`}
+              />
+              {errors.name && <ErrorMessage message={errors.name} />}
+            </View>
 
-          <InputField
-            icon={Barcode}
-            label="Barcode"
-            placeholder="Enter product barcode"
-            value={formData.barcode}
-            onChangeText={(text) => {
-              setFormData({ ...formData, barcode: text });
-              setErrors({ ...errors, barcode: '' });
-            }}
-            error={errors.barcode}
-          />
+            <View>
+              <Text className="text-gray-700 font-medium mb-2">Barcode</Text>
+              <Input
+                leftIcon={Barcode}
+                placeholder="Enter product barcode"
+                value={formData.barcode}
+                onChangeText={(text) => updateFormField("barcode", text)}
+                containerClassName={`border ${
+                  errors.barcode ? "border-red-500" : "border-gray-100"
+                } py-1`}
+              />
+              {errors.barcode && <ErrorMessage message={errors.barcode} />}
+            </View>
 
-          <InputField
-            icon={DollarSign}
-            label="Price"
-            placeholder="Enter product price"
-            value={formData.price}
-            onChangeText={(text) => {
-              setFormData({ ...formData, price: text });
-              setErrors({ ...errors, price: '' });
-            }}
-            keyboardType="numeric"
-            error={errors.price}
-          />
+            <View>
+              <Text className="text-gray-700 font-medium mb-2">Price</Text>
+              <Input
+                leftIcon={DollarSign}
+                placeholder="Enter product price"
+                value={formData.price}
+                onChangeText={(text) => updateFormField("price", text)}
+                keyboardType="numeric"
+                containerClassName={`border ${
+                  errors.price ? "border-red-500" : "border-gray-100"
+                } py-1`}
+              />
+              {errors.price && <ErrorMessage message={errors.price} />}
+            </View>
 
-          <InputField
-            icon={Building2}
-            label="Supplier"
-            placeholder="Enter supplier name"
-            value={formData.supplier}
-            onChangeText={(text) => {
-              setFormData({ ...formData, supplier: text });
-              setErrors({ ...errors, supplier: '' });
-            }}
-            error={errors.supplier}
-          />
+            <View>
+              <Text className="text-gray-700 font-medium mb-2">Supplier</Text>
+              <Input
+                leftIcon={Building2}
+                placeholder="Enter supplier name"
+                value={formData.supplier}
+                onChangeText={(text) => updateFormField("supplier", text)}
+                containerClassName={`border ${
+                  errors.supplier ? "border-red-500" : "border-gray-100"
+                } py-1`}
+              />
+              {errors.supplier && <ErrorMessage message={errors.supplier} />}
+            </View>
 
-          <InputField
-            icon={Archive}
-            label="Quantity"
-            placeholder="Enter product quantity"
-            value={formData.quantity}
-            onChangeText={(text) => {
-              setFormData({ ...formData, quantity: text });
-              setErrors({ ...errors, quantity: '' });
-            }}
-            keyboardType="numeric"
-            error={errors.quantity}
-          />
+            <View>
+              <Text className="text-gray-700 font-medium mb-2">Quantity</Text>
+              <Input
+                leftIcon={Archive}
+                placeholder="Enter product quantity"
+                value={formData.quantity}
+                onChangeText={(text) => updateFormField("quantity", text)}
+                keyboardType="numeric"
+                containerClassName={`border ${
+                  errors.quantity ? "border-red-500" : "border-gray-100"
+                } py-1`}
+              />
+              {errors.quantity && <ErrorMessage message={errors.quantity} />}
+            </View>
+          </View>
 
           {/* Warehouse Selection */}
           <View className="mb-6">
-            <Text className="text-gray-700 text-sm mb-2">Select Warehouse</Text>
-            {warehouses.map((warehouse) => (
+            <Text className="text-gray-700 font-medium mb-2">
+              Select Warehouse
+            </Text>
+            {WAREHOUSES.map((warehouse) => (
               <TouchableOpacity
                 key={warehouse.id}
-                onPress={() => {
-                  setFormData({ ...formData, warehouse: warehouse.id });
-                  setErrors({ ...errors, warehouse: '' });
-                }}
-                className={`mb-2 p-4 rounded-xl flex-row items-center justify-between ${
-                  formData.warehouse === warehouse.id 
-                    ? 'bg-yellow-500' 
-                    : 'bg-white border border-gray-200'
+                onPress={() => updateFormField("warehouse", warehouse.id)}
+                className={`mb-3 p-4 rounded-xl flex-row items-center justify-between ${
+                  formData.warehouse === warehouse.id
+                    ? "bg-yellow-500"
+                    : "bg-white border border-gray-100"
                 }`}
               >
                 <View className="flex-row items-center">
-                  <Warehouse 
-                    size={20} 
-                    color={formData.warehouse === warehouse.id ? 'white' : '#6B7280'} 
+                  <Warehouse
+                    size={20}
+                    color={
+                      formData.warehouse === warehouse.id ? "white" : "#eab308"
+                    }
                   />
                   <View className="ml-3">
-                    <Text className={
-                      formData.warehouse === warehouse.id 
-                        ? 'text-white font-medium' 
-                        : 'text-gray-900'
-                    }>
+                    <Text
+                      className={`${
+                        formData.warehouse === warehouse.id
+                          ? "text-white"
+                          : "text-gray-900"
+                      } font-medium`}
+                    >
                       {warehouse.name}
                     </Text>
                     <View className="flex-row items-center mt-1">
-                      <MapPin 
-                        size={14} 
-                        color={formData.warehouse === warehouse.id ? '#FEF9C3' : '#9CA3AF'} 
+                      <MapPin
+                        size={14}
+                        color={
+                          formData.warehouse === warehouse.id
+                            ? "#FEF9C3"
+                            : "#9CA3AF"
+                        }
                       />
-                      <Text className={
-                        formData.warehouse === warehouse.id 
-                          ? 'text-yellow-100 ml-1' 
-                          : 'text-gray-500 ml-1'
-                      }>
+                      <Text
+                        className={`${
+                          formData.warehouse === warehouse.id
+                            ? "text-yellow-100"
+                            : "text-gray-500"
+                        } ml-1`}
+                      >
                         {warehouse.city}
                       </Text>
                     </View>
                   </View>
                 </View>
-                <ChevronRight 
-                  size={20} 
-                  color={formData.warehouse === warehouse.id ? 'white' : '#6B7280'} 
+                <ChevronRight
+                  size={20}
+                  color={
+                    formData.warehouse === warehouse.id ? "white" : "#6B7280"
+                  }
                 />
               </TouchableOpacity>
             ))}
-            {errors.warehouse && (
-              <Text className="text-red-500 text-xs mt-1 ml-1">{errors.warehouse}</Text>
-            )}
+            {errors.warehouse && <ErrorMessage message={errors.warehouse} />}
           </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
 
-          {/* Submit Button */}
+      {/* Submit Button */}
+      <BlurView
+        intensity={100}
+        tint="light"
+        className="absolute bottom-0 left-0 right-0 border-t border-gray-200"
+      >
+        <View
+          className="px-4 py-4"
+          style={{
+            paddingBottom: Platform.OS === "ios" ? 20 : 12,
+          }}
+        >
           <TouchableOpacity
             onPress={handleSubmit}
             disabled={loading}
-            className={`py-4 rounded-xl items-center justify-center mb-6 ${
-              loading ? 'bg-yellow-400' : 'bg-yellow-500'
+            className={`py-4 rounded-xl items-center justify-center ${
+              loading ? "bg-yellow-400" : "bg-yellow-500"
             }`}
           >
             {loading ? (
@@ -381,8 +444,8 @@ const AddProductPage = () => {
               </Text>
             )}
           </TouchableOpacity>
-        </ScrollView>
-      </KeyboardAvoidingView>
+        </View>
+      </BlurView>
     </SafeAreaView>
   );
 };
