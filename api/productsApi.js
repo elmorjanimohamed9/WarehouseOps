@@ -1,9 +1,13 @@
 import { API_URL } from './config';
+import { Product } from '@/types/product';
 
 export const productsApi = {
-  getAllProducts: async () => {
+  getAllProducts: async (): Promise<Product[]> => {
     try {
       const response = await fetch(`${API_URL}/products`);
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
       return await response.json();
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -11,9 +15,12 @@ export const productsApi = {
     }
   },
 
-  getProductById: async (id) => {
+  getProductById: async (id: string): Promise<Product> => {
     try {
       const response = await fetch(`${API_URL}/products/${id}`);
+      if (!response.ok) {
+        throw new Error('Product not found');
+      }
       return await response.json();
     } catch (error) {
       console.error('Error fetching product:', error);
@@ -21,7 +28,7 @@ export const productsApi = {
     }
   },
 
-  addProduct: async (product) => {
+  addProduct: async (product: Partial<Product>): Promise<Product> => {
     try {
       const response = await fetch(`${API_URL}/products`, {
         method: 'POST',
@@ -30,6 +37,9 @@ export const productsApi = {
         },
         body: JSON.stringify(product),
       });
+      if (!response.ok) {
+        throw new Error('Failed to add product');
+      }
       return await response.json();
     } catch (error) {
       console.error('Error adding product:', error);
@@ -37,7 +47,7 @@ export const productsApi = {
     }
   },
 
-  updateProduct: async (id, updates) => {
+  updateProduct: async (id: string, updates: Partial<Product>): Promise<Product> => {
     try {
       const response = await fetch(`${API_URL}/products/${id}`, {
         method: 'PUT',
@@ -46,10 +56,13 @@ export const productsApi = {
         },
         body: JSON.stringify(updates),
       });
+      if (!response.ok) {
+        throw new Error('Failed to update product');
+      }
       return await response.json();
     } catch (error) {
       console.error('Error updating product:', error);
       throw error;
     }
-  }
+  },
 };
