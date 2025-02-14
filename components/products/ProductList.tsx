@@ -2,6 +2,8 @@ import React from 'react';
 import { View, Text, ScrollView } from 'react-native';
 import { Package } from 'lucide-react-native';
 import ProductCard from './ProductCard';
+import { useRouter } from "expo-router";
+
 
 interface Product {
   id: number;
@@ -29,6 +31,8 @@ interface ProductListProps {
 }
 
 const ProductList = ({ products, onProductPress }: ProductListProps) => {
+  const router = useRouter();
+
   if (products.length === 0) {
     return (
       <View className="flex-1 items-center justify-center px-6">
@@ -53,7 +57,7 @@ const ProductList = ({ products, onProductPress }: ProductListProps) => {
         <ProductCard
           key={product.id}
           product={product}
-          onPress={() => onProductPress?.(product)}
+          onPress={() => router.push(`/products/${product.id}`)}
         />
       ))}
     </ScrollView>
