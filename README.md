@@ -81,6 +81,5 @@ Contributions are welcome! If you have suggestions for improvements or new featu
 
 For any inquiries or feedback, please reach out to:
 
-- **Your Name**: [Your Email](mailto:elmorjanimohamed9@gmail.com)
-- **GitHub**: [Your GitHub Profile](https://github.com/YourUsername)
+- **El Morjani Mohamed**: [elmorjanimohamed9@gmail.com](mailto:elmorjanimohamed9@gmail.com)
 
