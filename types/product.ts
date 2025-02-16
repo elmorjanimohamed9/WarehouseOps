@@ -17,10 +17,12 @@ export interface Product {
   price: number;
   solde?: number;
   supplier: string;
-  image?: string;
+  image?: string ;
   stocks: Stock[];
-  editedBy: {
-    warehousemanId: number;
-    at: string;
-  }[];
+  editedBy: ProductEditHistory[]; 
+}
+
+export interface ProductEditHistory {
+  warehousemanId: number;
+  at: string;
 }

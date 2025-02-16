@@ -30,10 +30,10 @@ export const useProducts = () => {
     loading,
     error,
     refreshProducts: () => dispatch(fetchProducts()),
-    getProduct: (id: string) => dispatch(fetchProductById(id)),
+    getProduct: (id: string) => dispatch(fetchProductById(id)).unwrap(),
     addProduct: (product: Partial<Product>) => dispatch(addNewProduct(product)),
     updateProduct: (id: string, updates: Partial<Product>) => 
-      dispatch(updateExistingProduct({ id, updates })),
+      dispatch(updateExistingProduct({ id, updates })).unwrap(),
     clearProduct: () => dispatch(clearSelectedProduct()),
     clearError: () => dispatch(clearError()),
   };

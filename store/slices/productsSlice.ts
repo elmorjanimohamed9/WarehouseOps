@@ -80,13 +80,13 @@ const productsSlice = createSlice({
       })
       // Update product
       .addCase(updateExistingProduct.fulfilled, (state, action) => {
-        const index = state.items.findIndex(item => item.id === action.payload.id);
-        if (index !== -1) {
-          state.items[index] = action.payload;
-        }
+        state.items = state.items.map(item => 
+          item.id === action.payload.id ? action.payload : item
+        );
         if (state.selectedProduct?.id === action.payload.id) {
           state.selectedProduct = action.payload;
         }
+        state.loading = false;
       });
   },
 });

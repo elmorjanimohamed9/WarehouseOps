@@ -7,6 +7,7 @@ import '../../global.css'
 const TabLayout = () => {
   const pathname = usePathname();
   const isAddProductPage = pathname.includes('/products/add');
+  const isScanPage = pathname.includes('/scan');
 
   return (
     <Tabs
@@ -24,7 +25,7 @@ const TabLayout = () => {
           height: 60,
           paddingBottom: 10,
           zIndex: 1,
-          display: isAddProductPage ? 'none' : 'flex'
+          display: isAddProductPage || isScanPage ? 'none' : 'flex',
         },
         tabBarActiveTintColor: '#eab308',
         tabBarInactiveTintColor: '#9ca3af',
@@ -37,6 +38,7 @@ const TabLayout = () => {
           title: 'Home',
           headerShown: false,
           tabBarIcon: ({ color }) => <Home size={24} color={color} />,
+          href: '/home',
         }}
       />
       <Tabs.Screen
@@ -45,6 +47,7 @@ const TabLayout = () => {
           title: 'Products',
           headerShown: false,
           tabBarIcon: ({ color }) => <Package size={24} color={color} />,
+          href: '/products',
         }}
       />
       <Tabs.Screen

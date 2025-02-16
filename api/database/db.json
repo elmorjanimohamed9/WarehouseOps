@@ -23,7 +23,7 @@
         {
           "id": 2991,
           "name": "Lazari H2",
-          "quantity": 24,
+          "quantity": 32,
           "localisation": {
             "city": "Oujda",
             "latitude": 34.689404,
@@ -32,6 +32,18 @@
         }
       ],
       "editedBy": [
+        {
+          "warehousemanId": 1444,
+          "at": "2025-02-16"
+        },
+        {
+          "warehousemanId": 1444,
+          "at": "2025-02-16"
+        },
+        {
+          "warehousemanId": 1444,
+          "at": "2025-02-16"
+        },
         {
           "warehousemanId": 1333,
           "at": "2025-02-02"
@@ -60,7 +72,7 @@
         {
           "id": 2991,
           "name": "Lazari H2",
-          "quantity": 5,
+          "quantity": 9,
           "localisation": {
             "city": "Oujda",
             "latitude": 34.689404,
@@ -120,7 +132,6 @@
       ]
     },
     {
-      "id": "5",
       "name": "AirPods Pro 2",
       "type": "Accessoires",
       "barcode": "7891234567890",
@@ -131,7 +142,7 @@
         {
           "id": 2991,
           "name": "Lazari H2",
-          "quantity": 15,
+          "quantity": 34,
           "localisation": {
             "city": "Oujda",
             "latitude": 34.689404,
@@ -142,12 +153,32 @@
       "editedBy": [
         {
           "warehousemanId": 1444,
+          "at": "2025-02-16"
+        },
+        {
+          "warehousemanId": 1444,
+          "at": "2025-02-16"
+        },
+        {
+          "warehousemanId": 1444,
+          "at": "2025-02-16"
+        },
+        {
+          "warehousemanId": 1444,
+          "at": "2025-02-16"
+        },
+        {
+          "warehousemanId": 1444,
+          "at": "2025-02-16"
+        },
+        {
+          "warehousemanId": 1444,
           "at": "2025-02-12"
         }
-      ]
+      ],
+      "id": "5"
     },
     {
-      "id": "6",
       "name": "Samsung S24 Ultra",
       "type": "Smartphone",
       "barcode": "6543217890123",
@@ -169,7 +200,7 @@
         {
           "id": 2991,
           "name": "Lazari H2",
-          "quantity": 12,
+          "quantity": 37,
           "localisation": {
             "city": "Oujda",
             "latitude": 34.689404,
@@ -180,9 +211,14 @@
       "editedBy": [
         {
           "warehousemanId": 1444,
+          "at": "2025-02-16"
+        },
+        {
+          "warehousemanId": 1444,
           "at": "2025-02-12"
         }
-      ]
+      ],
+      "id": "6"
     },
     {
       "id": "7",

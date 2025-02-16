@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 import { SafeAreaView, View, RefreshControl, ScrollView } from 'react-native';
 import { Search, Filter, Tag, ArrowUpDown, Package, Truck } from 'lucide-react-native';
 
-import SearchHeader from '../../../components/search/SearchHeader';
-import SearchInput from '../../../components/common/Input';
-import ActiveFilters from '../../../components/search/ActiveFilters';
-import FilterPanel from '../../../components/search/FilterPanel';
-import ProductList from '../../../components/products/ProductList';
-import LoadingScreen from '../../../components/common/Loading';
-import { useProducts } from '../../../hooks/useProducts';
-import { Product, SortOption } from '../../../types/search.types';
+import SearchHeader from '@/components/search/SearchHeader';
+import SearchInput from '@/components/common/Input';
+import ActiveFilters from '@/components/search/ActiveFilters';
+import FilterPanel from '@/components/search/FilterPanel';
+import ProductList from '@/components/products/ProductList';
+import LoadingScreen from '@/components/common/Loading';
+import { useProducts } from '@/hooks/useProducts';
+import { Product, SortOption } from '@/types/search.types';
 
 const sortOptions: SortOption[] = [
   { id: 'name', label: 'Name', icon: Tag },
