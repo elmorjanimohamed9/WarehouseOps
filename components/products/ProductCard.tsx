@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, Image, TouchableOpacity } from "react-native";
-import { Package, Tag } from "lucide-react-native";
+import { Tag } from "lucide-react-native";
 
 interface ProductCardProps {
   product: {
@@ -30,6 +30,7 @@ const ProductCard = ({ product, onPress }: ProductCardProps) => {
 
   return (
     <TouchableOpacity
+      testID="product-card-touchable"
       onPress={onPress}
       className="bg-white rounded-2xl mb-4 overflow-hidden shadow-sm"
     >
@@ -87,11 +88,11 @@ const ProductCard = ({ product, onPress }: ProductCardProps) => {
           <View className="flex-row items-center justify-between mt-2">
             <View>
               <Text className="text-yellow-500 font-bold text-base">
-                ${product.price.toLocaleString()}
+                {product.price.toLocaleString()} MAD
               </Text>
               {product.solde && (
                 <Text className="text-xs text-gray-400 line-through">
-                  ${product.solde.toLocaleString()}
+                  {product.solde.toLocaleString()} MAD
                 </Text>
               )}
             </View>

@@ -33,6 +33,8 @@ interface AddProductSheetProps {
   onAdd: (product: Product) => void;
 }
 
+const API_URL = process.env.EXPO_PUBLIC_API_URL;
+
 const AddProductSheet = ({ isVisible, onClose, onAdd }: AddProductSheetProps) => {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -124,7 +126,7 @@ const AddProductSheet = ({ isVisible, onClose, onAdd }: AddProductSheetProps) =>
         }]
       };
 
-      const response = await fetch('http://172.16.11.195:3000/products', {
+      const response = await fetch(`${API_URL}/products`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newProduct)

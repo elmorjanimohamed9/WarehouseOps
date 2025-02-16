@@ -5,9 +5,20 @@ export interface Statistics {
     mostAddedProducts: any[];
     mostRemovedProducts: any[];
   }
+
+  export interface Stock {
+    id: number;
+    name: string;
+    quantity: number;
+    localisation: {
+      city: string;
+      latitude: number;
+      longitude: number;
+    };
+  }
   
   export interface Product {
-    id: number;
+    id: string;
     name: string;
     type: string;
     barcode: string;
@@ -15,16 +26,7 @@ export interface Statistics {
     solde?: number;
     supplier: string;
     image: string;
-    stocks: Array<{
-      id: number;
-      name: string;
-      quantity: number;
-      localisation: {
-        city: string;
-        latitude: number;
-        longitude: number;
-      }
-    }>;
+    stocks: Stock[]; 
     editedBy: Array<{
       warehousemanId: number;
       at: string;

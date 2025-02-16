@@ -20,10 +20,7 @@ const RecentProductCard = ({ product, onPress }: RecentProductCardProps) => {
   const formattedDate = new Date(product.editedBy[0]?.at).toLocaleDateString();
 
   return (
-    <TouchableOpacity 
-      onPress={onPress}
-      className="bg-white rounded-2xl mr-4 w-48 overflow-hidden shadow-sm"
-    >
+    <TouchableOpacity testID="recent-product-card-touchable" onPress={onPress} className="bg-white rounded-2xl mr-4 w-48 overflow-hidden shadow-sm">
       {/* Product Image */}
       <Image
         source={{ uri: product.image }}
@@ -42,7 +39,7 @@ const RecentProductCard = ({ product, onPress }: RecentProductCardProps) => {
         </Text>
         
         <Text className="text-yellow-500 font-bold">
-          ${product.price.toLocaleString()}
+          {product.price.toLocaleString()} MAD
         </Text>
 
         {/* Date Added */}

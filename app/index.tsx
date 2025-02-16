@@ -10,10 +10,8 @@ const SplashScreen = () => {
 
   return (
     <View className="flex-1 bg-gray-50">
-      {/* Top Decorative Element */}
       <View className="absolute top-0 right-0 left-0 h-2/5 bg-yellow-500 rounded-b-[48px]" />
 
-      {/* Main Content Container */}
       <View className="flex-1 px-6 pt-10">
         {/* Header */}
         <View className="flex items-center justify-center space-x-2 mb-4">

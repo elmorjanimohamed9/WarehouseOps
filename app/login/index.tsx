@@ -12,7 +12,7 @@ import {
   TouchableWithoutFeedback,
 } from "react-native";
 import { Lock, Package } from "lucide-react-native";
-import { router } from "expo-router";
+import { useRouter } from "expo-router";
 import { useDispatch, useSelector } from "react-redux";
 import {
   loginStart,
@@ -26,6 +26,7 @@ const LoginScreen = () => {
   const dispatch = useDispatch();
   const { loading, error } = useSelector((state: RootState) => state.auth);
   const [secretKey, setSecretKey] = useState("");
+  const router = useRouter();
 
   useEffect(() => {
     checkExistingSession();
@@ -40,18 +41,20 @@ const LoginScreen = () => {
   };
 
   const handleLogin = async () => {
-    if (!secretKey.trim()) return;
+    if (!secretKey.trim()) {
+      Alert.alert("Error", "Please enter your secret key.");
+      return;
+    }
 
     dispatch(loginStart());
     try {
-      const response = await fetch("http://172.16.11.195:3000/warehousemans");
+      const response = await fetch("http://192.168.43.247:3000/warehousemans");
       const warehousemans = await response.json();
       const user = warehousemans.find(
         (user: { secretKey: string }) => user.secretKey === secretKey
       );
 
       if (user) {
-        // Store auth data in AsyncStorage
         const success = await storeAuthData(user.secretKey, user);
         if (success) {
           dispatch(loginSuccess(user));
@@ -84,7 +87,6 @@ const LoginScreen = () => {
           bounces={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Top Section with Logo and Illustration */}
           <View className="h-2/5 bg-yellow-500 rounded-b-[48px] justify-end items-center p-8">
             <Package color="white" size={64} className="mb-4" />
             <Text className="text-white text-2xl font-bold mb-2">
@@ -95,7 +97,6 @@ const LoginScreen = () => {
             </Text>
           </View>
 
-          {/* Login Form Section */}
           <View className="flex-1 px-8 pt-12 pb-8">
             <View className="space-y-4">
               <View>
@@ -107,7 +108,6 @@ const LoginScreen = () => {
                 </Text>
               </View>
 
-              {/* Input Field */}
               <View className="mt-8">
                 <Text className="text-gray-700 mb-2 font-medium">
                   Secret Key
@@ -128,7 +128,6 @@ const LoginScreen = () => {
                 </View>
               </View>
 
-              {/* Login Button */}
               <TouchableOpacity
                 className={`h-12 mt-2 rounded-xl items-center justify-center ${
                   loading ? "bg-yellow-400" : "bg-yellow-500"
@@ -141,13 +140,11 @@ const LoginScreen = () => {
                 </Text>
               </TouchableOpacity>
 
-              {/* Help Text */}
               <Text className="text-center text-gray-600 mt-4 mb-24">
                 Contact your administrator if you've forgotten your secret key
               </Text>
             </View>
 
-            {/* Footer */}
             <View className="mt-8">
               <Text className="text-center text-gray-500 text-sm">
                 © 2025 WarehouseOps. All rights reserved.

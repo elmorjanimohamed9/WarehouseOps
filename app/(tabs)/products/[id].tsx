@@ -1,17 +1,15 @@
-import React, { useEffect, useState } from 'react';
-import { 
-  View, 
-  Text, 
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
   ScrollView,
   Image,
   TouchableOpacity,
   StatusBar,
   SafeAreaView,
-  ActivityIndicator,
   Share,
-  Dimensions
-} from 'react-native';
-import { 
+} from "react-native";
+import {
   ArrowLeft,
   Package,
   MapPin,
@@ -22,20 +20,88 @@ import {
   Edit,
   Share2,
   AlertTriangle,
-  ChevronRight
-} from 'lucide-react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { Product } from '@/types/product';
-import { LoadingSpinner } from '@/components/common/LoadingSpinner';
+  ChevronRight,
+  Building2,
+} from "lucide-react-native";
+import { useRouter, useLocalSearchParams } from "expo-router";
+import { Product } from "@/types/product";
+import { LoadingSpinner } from "@/components/common/LoadingSpinner";
+import { QuantityEditModal } from "@/components/products/QuantityEditModal";
+import { useAuth } from "@/hooks/useAuth";
 
-const { width } = Dimensions.get('window');
+const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
-const ProductDetails = () => {
+interface StatCardProps {
+  icon: React.ElementType;
+  value: number;
+  label: string;
+  color: string;
+  warning?: boolean;
+}
+
+interface InfoRowProps {
+  icon: React.ElementType;
+  label: string;
+  value: string;
+  color: string;
+  isLast?: boolean;
+}
+
+const StatCard: React.FC<StatCardProps> = ({
+  icon: Icon,
+  value,
+  label,
+  color,
+  warning,
+}) => (
+  <View className="flex-1 bg-gray-50 p-4 rounded-2xl">
+    <View className="flex-row items-center space-x-3">
+      <View
+        className="w-12 h-12 rounded-xl items-center justify-center"
+        style={{ backgroundColor: warning ? "#FEF2F2" : `${color}15` }}
+      >
+        <Icon size={24} color={warning ? "#EF4444" : color} />
+      </View>
+      <View className="ml-2">
+        <Text className="text-2xl font-bold text-gray-900">{value}</Text>
+        <Text className="text-sm text-gray-500">{label}</Text>
+      </View>
+    </View>
+  </View>
+);
+
+const InfoRow: React.FC<InfoRowProps> = ({
+  icon: Icon,
+  label,
+  value,
+  color,
+  isLast,
+}) => (
+  <View
+    className={`flex-row items-center ${
+      !isLast ? "border-b border-gray-200 pb-4 mb-4" : ""
+    }`}
+  >
+    <View
+      className="w-10 h-10 rounded-full items-center justify-center"
+      style={{ backgroundColor: `${color}15` }}
+    >
+      <Icon size={20} color={color} />
+    </View>
+    <View className="ml-4 flex-1">
+      <Text className="text-gray-500 text-sm">{label}</Text>
+      <Text className="text-gray-900 font-medium mt-0.5">{value}</Text>
+    </View>
+  </View>
+);
+
+const ProductDetails: React.FC = () => {
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
-  const [scrollOffset, setScrollOffset] = useState(0);
+  const { user } = useAuth();
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
 
   useEffect(() => {
     fetchProductDetails();
@@ -43,7 +109,7 @@ const ProductDetails = () => {
 
   const fetchProductDetails = async () => {
     try {
-      const response = await fetch(`http://172.16.11.195:3000/products/${id}`);
+      const response = await fetch(`${API_URL}/products/${id}`);
       const data = await response.json();
       setProduct(data);
     } catch (error) {
@@ -61,13 +127,18 @@ const ProductDetails = () => {
         title: product.name,
       });
     } catch (error) {
-      console.error('Error sharing product:', error);
+      console.error("Error sharing product:", error);
     }
   };
 
   const getTotalStock = () => {
     if (!product) return 0;
     return product.stocks.reduce((sum, stock) => sum + stock.quantity, 0);
+  };
+
+  const getUserWarehouseStock = () => {
+    if (!product || !user?.warehouseId) return null;
+    return product.stocks.find(stock => stock.id === user.warehouseId);
   };
 
   if (loading) {
@@ -79,7 +150,7 @@ const ProductDetails = () => {
       <View className="flex-1 bg-gray-50 items-center justify-center">
         <AlertTriangle size={48} color="#EF4444" />
         <Text className="text-gray-500 text-lg mt-4">Product not found</Text>
-        <TouchableOpacity 
+        <TouchableOpacity
           onPress={() => router.back()}
           className="mt-6 px-6 py-3 bg-yellow-500 rounded-xl"
         >
@@ -90,50 +161,42 @@ const ProductDetails = () => {
   }
 
   const isLowStock = getTotalStock() < 10;
+  const userWarehouseStock = getUserWarehouseStock();
 
   return (
     <View className="flex-1 bg-gray-50">
       <StatusBar barStyle="dark-content" />
-
-      {/* Floating Header */}
       <SafeAreaView>
-  <View className="bg-yellow-500 px-6 py-4">
-    <View className="flex-row items-center justify-between">
-      <TouchableOpacity
-        onPress={() => router.back()}
-        className="w-10 h-10 bg-yellow-400 rounded-full items-center justify-center"
-      >
-        <ArrowLeft color="#f9fafb" size={24} />
-      </TouchableOpacity>
+        <View className="bg-yellow-500 px-6 py-4">
+          <View className="flex-row items-center justify-between">
+            <TouchableOpacity
+              onPress={() => router.back()}
+              className="w-10 h-10 bg-yellow-400 rounded-full items-center justify-center"
+            >
+              <ArrowLeft color="#f9fafb" size={24} />
+            </TouchableOpacity>
 
-      <Text className="text-white text-lg font-bold">
-        {product.name}
-      </Text>
+            <Text className="text-white text-lg font-bold">{product.name}</Text>
 
-      <View className="flex-row">
-        <TouchableOpacity
-          onPress={handleShare}
-          className="w-10 h-10 mr-2 bg-yellow-400 rounded-full items-center justify-center"
-        >
-          <Share2 color="#f9fafb" size={20} />
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => router.push(`/products/edit/${product.id}`)}
-          className="w-10 h-10 bg-yellow-400 rounded-full items-center justify-center"
-        >
-          <Edit color="#f9fafb" size={20} />
-        </TouchableOpacity>
-      </View>
-    </View>
-  </View>
-</SafeAreaView>
+            <View className="flex-row">
+              <TouchableOpacity
+                onPress={handleShare}
+                className="w-10 h-10 mr-2 bg-yellow-400 rounded-full items-center justify-center"
+              >
+                <Share2 color="#f9fafb" size={20} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setIsEditModalVisible(true)}
+                className="w-10 h-10 bg-yellow-400 rounded-full items-center justify-center"
+              >
+                <Edit color="#f9fafb" size={20} />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </SafeAreaView>
 
-      <ScrollView 
-        className="flex-1"
-        onScroll={e => setScrollOffset(e.nativeEvent.contentOffset.y)}
-        scrollEventThrottle={16}
-      >
-        {/* Hero Image */}
+      <ScrollView className="flex-1">
         <View className="h-[300px]">
           <Image
             source={{ uri: product.image }}
@@ -142,9 +205,7 @@ const ProductDetails = () => {
           />
         </View>
 
-        {/* Content Container */}
         <View className="bg-white -mt-12 rounded-t-[32px] px-6 pt-8 pb-6">
-          {/* Product Header */}
           <View className="mb-8">
             <View className="flex-row items-center mb-2">
               <Tag size={16} color="#eab308" />
@@ -160,7 +221,6 @@ const ProductDetails = () => {
             </Text>
           </View>
 
-          {/* Quick Stats */}
           <View className="flex-row mb-6 gap-4">
             <StatCard
               icon={Package}
@@ -177,7 +237,6 @@ const ProductDetails = () => {
             />
           </View>
 
-          {/* Product Details */}
           <View className="mb-6">
             <Text className="text-lg font-bold text-gray-900 mb-4">
               Product Information
@@ -205,76 +264,67 @@ const ProductDetails = () => {
             </View>
           </View>
 
-          {/* Stock Information */}
           <View className="mb-14">
-            <Text className="text-lg font-bold text-gray-900 mb-4">
-              Stock Information
-            </Text>
-            {product.stocks.map((stock, index) => (
+            <View className="flex-row items-center justify-between mb-4">
+              <Text className="text-lg font-bold text-gray-900">
+                Stock Information
+              </Text>
+              {userWarehouseStock && (
+                <View className="flex-row items-center bg-yellow-100 px-3 py-1.5 rounded-lg">
+                  <Building2 size={16} color="#EAB308" />
+                  <Text className="text-yellow-600 font-medium ml-1.5">
+                    Your Warehouse
+                  </Text>
+                </View>
+              )}
+            </View>
+
+            {userWarehouseStock && (
               <TouchableOpacity
-                key={stock.id}
-                onPress={() => router.push(`/stock-management/${product.id}/${stock.id}`)}
-                className={`bg-gray-50 p-4 rounded-2xl flex-row items-center justify-between
-                  ${index !== product.stocks.length - 1 ? 'mb-3' : ''}`}
+                className="bg-yellow-50 border-2 border-yellow-200 p-4 rounded-2xl flex-row items-center justify-between mb-3"
               >
                 <View className="flex-1">
                   <Text className="text-lg font-semibold text-gray-900">
-                    {stock.name}
+                    {userWarehouseStock.name}
                   </Text>
                   <View className="flex-row items-center mt-1">
                     <MapPin size={14} color="#6B7280" />
                     <Text className="text-gray-500 ml-1">
-                      {stock.localisation.city}
+                      {userWarehouseStock.localisation.city}
                     </Text>
                   </View>
                 </View>
                 <View className="flex-row items-center space-x-3">
-                  <View className="bg-green-100 px-4 py-2 rounded-xl">
-                    <Text className="text-green-500 font-bold">
-                      {stock.quantity} units
+                  <View className="bg-yellow-100 px-4 py-2 rounded-xl">
+                    <Text className="text-yellow-600 font-bold">
+                      {userWarehouseStock.quantity} units
                     </Text>
                   </View>
                   <ChevronRight size={20} color="#9CA3AF" />
                 </View>
               </TouchableOpacity>
-            ))}
+            )}
+
+            {product.stocks.length === 0 && (
+              <View className="bg-gray-50 p-6 rounded-2xl items-center">
+                <Package size={32} color="#9CA3AF" />
+                <Text className="text-gray-500 mt-2 text-center">
+                  No stock information available
+                </Text>
+              </View>
+            )}
           </View>
         </View>
       </ScrollView>
+
+      <QuantityEditModal
+        isVisible={isEditModalVisible}
+        onClose={() => setIsEditModalVisible(false)}
+        product={product}
+        onUpdate={fetchProductDetails}
+      />
     </View>
   );
 };
-
-const StatCard = ({ icon: Icon, value, label, color, warning }: { icon: React.ElementType; value: number; label: string; color: string; warning?: boolean }) => (
-  <View className="flex-1 bg-gray-50 p-4 rounded-2xl">
-    <View className="flex-row items-center space-x-3">
-      <View 
-        className={`w-12 h-12 rounded-xl items-center justify-center`}
-        style={{ backgroundColor: warning ? '#FEF2F2' : `${color}15` }}
-      >
-        <Icon size={24} color={warning ? '#EF4444' : color} />
-      </View>
-      <View className="ml-2">
-        <Text className="text-2xl font-bold text-gray-900">{value}</Text>
-        <Text className="text-sm text-gray-500">{label}</Text>
-      </View>
-    </View>
-  </View>
-);
-
-const InfoRow = ({ icon: Icon, label, value, color, isLast }: { icon: React.ElementType; label: string; value: string; color: string; isLast?: boolean }) => (
-  <View className={`flex-row items-center ${!isLast ? 'border-b border-gray-200 pb-4 mb-4' : ''}`}>
-    <View 
-      className="w-10 h-10 rounded-full items-center justify-center"
-      style={{ backgroundColor: `${color}15` }}
-    >
-      <Icon size={20} color={color} />
-    </View>
-    <View className="ml-4 flex-1">
-      <Text className="text-gray-500 text-sm">{label}</Text>
-      <Text className="text-gray-900 font-medium mt-0.5">{value}</Text>
-    </View>
-  </View>
-);
 
 export default ProductDetails;

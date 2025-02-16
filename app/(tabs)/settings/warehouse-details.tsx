@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   Image,
   ActivityIndicator,
-  Dimensions,
 } from "react-native";
 import {
   MapPin,
@@ -18,7 +17,6 @@ import {
   Settings,
   BoxIcon,
   AlertTriangle,
-  TrendingUp,
   Building2,
   BarChart2,
 } from "lucide-react-native";
@@ -28,6 +26,9 @@ import { RootState } from "@/store/store";
 import { Product } from "@/types/product";
 import QuickActionButton from "@/components/common/QuickActionButton";
 import StatCard from "@/components/common/StatCard";
+import { LoadingSpinner }from "@/components/common/LoadingSpinner";
+
+const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 const WarehouseDetailsScreen = () => {
   const router = useRouter();
@@ -50,7 +51,7 @@ const WarehouseDetailsScreen = () => {
   const fetchWarehouseData = async () => {
     if (!user?.warehouseId) return;
     try {
-      const response = await fetch("http://172.16.11.195:3000/products");
+      const response = await fetch(`${API_URL}/products`);
       const data = await response.json();
       const warehouseProducts = data.filter((product: Product) =>
         product.stocks.some((stock) => stock.id === user.warehouseId)
@@ -65,6 +66,7 @@ const WarehouseDetailsScreen = () => {
   };
 
   const calculateStats = (warehouseProducts: Product[]) => {
+    if (!user) return;
     const stats = {
       totalProducts: warehouseProducts.length,
       outOfStock: warehouseProducts.filter((p) => {
@@ -88,7 +90,7 @@ const WarehouseDetailsScreen = () => {
         {!user ? (
           <Text>Please log in to view warehouse details</Text>
         ) : (
-          <ActivityIndicator color="#6366f1" size="large" />
+          <LoadingSpinner />
         )}
       </View>
     );

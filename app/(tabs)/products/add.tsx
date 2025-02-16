@@ -1,8 +1,7 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect, useMemo } from "react";
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   ScrollView,
   Alert,
@@ -33,7 +32,8 @@ import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { ErrorMessage } from "@/components/common/ErrorMessage";
 import { Product } from "@/types/product";
 import Input from "@/components/common/Input";
-import { useProducts } from '@/hooks/useProducts';
+import { useProducts } from "@/hooks/useProducts";
+import { useAuth } from "@/hooks/useAuth";
 
 interface FormData {
   name: string;
@@ -67,6 +67,7 @@ const WAREHOUSES = [
 const AddProductPage = () => {
   const router = useRouter();
   const { addProduct } = useProducts();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState<FormData>(INITIAL_FORM_STATE);
@@ -80,9 +81,21 @@ const AddProductPage = () => {
     []
   );
 
+  useEffect(() => {
+    if (user?.warehouseId) {
+      const userWarehouse = WAREHOUSES.find(
+        wh => parseInt(wh.id) === user.warehouseId
+      );
+      if (userWarehouse) {
+        updateFormField('warehouse', userWarehouse.id);
+      }
+    }
+  }, [user, updateFormField]);
+
   const pickImage = async () => {
     try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
 
       if (status !== "granted") {
         Alert.alert(
@@ -122,7 +135,10 @@ const AddProductPage = () => {
     }
     if (!formData.supplier.trim()) newErrors.supplier = "Supplier is required";
     if (!formData.quantity.trim()) newErrors.quantity = "Quantity is required";
-    else if (isNaN(Number(formData.quantity)) || Number(formData.quantity) < 0) {
+    else if (
+      isNaN(Number(formData.quantity)) ||
+      Number(formData.quantity) < 0
+    ) {
       newErrors.quantity = "Please enter a valid quantity";
     }
     if (!formData.warehouse) newErrors.warehouse = "Please select a warehouse";
@@ -177,17 +193,195 @@ const AddProductPage = () => {
       ]);
     } catch (error) {
       Alert.alert("Error", "Failed to add product. Please try again.");
+      console.error("Error adding product:", error);
     } finally {
       setLoading(false);
     }
   };
+
+  const renderImagePicker = useMemo(() => (
+    <View className="items-center my-6">
+      <TouchableOpacity
+        onPress={pickImage}
+        disabled={imageLoading}
+        className="w-40 h-40 bg-white rounded-3xl items-center justify-center border border-yellow-500 overflow-hidden"
+      >
+        {imageLoading ? (
+          <LoadingSpinner />
+        ) : formData.image ? (
+          <View className="relative w-full h-full">
+            <Image
+              source={{ uri: formData.image }}
+              className="w-full h-full"
+              resizeMode="cover"
+            />
+            <TouchableOpacity
+              onPress={() => updateFormField("image", "")}
+              className="absolute top-2 right-2 w-8 h-8 bg-yellow-500 rounded-full items-center justify-center"
+            >
+              <X size={16} color="white" />
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View className="items-center">
+            <Camera size={48} color="#eab308" />
+            <Text className="text-gray-500 text-sm mt-2">
+              Add Product Photo
+            </Text>
+          </View>
+        )}
+      </TouchableOpacity>
+    </View>
+  ), [formData.image, imageLoading, pickImage, updateFormField]);
+
+  const renderProductTypeSelection = useMemo(() => (
+    <View className="mb-6">
+      <Text className="text-gray-700 font-medium mb-2">Product Type</Text>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ paddingRight: 20 }}
+      >
+        {PRODUCT_TYPES.map((type) => (
+          <TouchableOpacity
+            key={type}
+            onPress={() => updateFormField("type", type)}
+            className={`mr-3 px-6 py-3 rounded-xl border ${
+              formData.type === type
+                ? "bg-yellow-500 border-yellow-500"
+                : "bg-white border-gray-100"
+            }`}
+          >
+            <Text
+              className={`${
+                formData.type === type ? "text-white" : "text-gray-700"
+              } font-medium`}
+            >
+              {type}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+      {errors.type && <ErrorMessage message={errors.type} />}
+    </View>
+  ), [errors.type, formData.type, updateFormField]);
+
+  const renderFormFields = useMemo(() => (
+    <View className="space-y-4">
+      <View>
+        <Text className="text-gray-700 font-medium mb-2">
+          Product Name
+        </Text>
+        <Input
+          leftIcon={Package}
+          placeholder="Enter product name"
+          value={formData.name}
+          onChangeText={(text) => updateFormField("name", text)}
+          containerClassName={`border ${
+            errors.name ? "border-red-500" : "border-gray-100"
+          } py-1`}
+        />
+        {errors.name && <ErrorMessage message={errors.name} />}
+      </View>
+
+      <View>
+        <Text className="text-gray-700 font-medium mb-2">Barcode</Text>
+        <Input
+          leftIcon={Barcode}
+          placeholder="Enter product barcode"
+          value={formData.barcode}
+          onChangeText={(text) => updateFormField("barcode", text)}
+          containerClassName={`border ${
+            errors.barcode ? "border-red-500" : "border-gray-100"
+          } py-1`}
+        />
+        {errors.barcode && <ErrorMessage message={errors.barcode} />}
+      </View>
+
+      <View>
+        <Text className="text-gray-700 font-medium mb-2">Price</Text>
+        <Input
+          leftIcon={DollarSign}
+          placeholder="Enter product price"
+          value={formData.price}
+          onChangeText={(text) => updateFormField("price", text)}
+          keyboardType="numeric"
+          containerClassName={`border ${
+            errors.price ? "border-red-500" : "border-gray-100"
+          } py-1`}
+        />
+        {errors.price && <ErrorMessage message={errors.price} />}
+      </View>
+
+      <View>
+        <Text className="text-gray-700 font-medium mb-2">Supplier</Text>
+        <Input
+          leftIcon={Building2}
+          placeholder="Enter supplier name"
+          value={formData.supplier}
+          onChangeText={(text) => updateFormField("supplier", text)}
+          containerClassName={`border ${
+            errors.supplier ? "border-red-500" : "border-gray-100"
+          } py-1`}
+        />
+        {errors.supplier && <ErrorMessage message={errors.supplier} />}
+      </View>
+
+      <View>
+        <Text className="text-gray-700 font-medium mb-2">Quantity</Text>
+        <Input
+          leftIcon={Archive}
+          placeholder="Enter product quantity"
+          value={formData.quantity}
+          onChangeText={(text) => updateFormField("quantity", text)}
+          keyboardType="numeric"
+          containerClassName={`border ${
+            errors.quantity ? "border-red-500" : "border-gray-100"
+          } py-1`}
+        />
+        {errors.quantity && <ErrorMessage message={errors.quantity} />}
+      </View>
+    </View>
+  ), [errors, formData, updateFormField]);
+
+  const renderWarehouseSelection = useMemo(() => (
+    <View className="mb-6">
+      <Text className="text-gray-700 font-medium mb-2">
+        Selected Warehouse
+      </Text>
+      {WAREHOUSES.filter(
+        (warehouse) => parseInt(warehouse.id) === user?.warehouseId
+      ).map((warehouse) => (
+        <View
+          key={warehouse.id}
+          className="mb-3 p-4 rounded-xl flex-row items-center justify-between bg-yellow-500"
+        >
+          <View className="flex-row items-center">
+            <Warehouse size={20} color="white" />
+            <View className="ml-3">
+              <Text className="text-white font-medium">
+                {warehouse.name}
+              </Text>
+              <View className="flex-row items-center mt-1">
+                <MapPin size={14} color="#FEF9C3" />
+                <Text className="text-yellow-100 ml-1">
+                  {warehouse.city}
+                </Text>
+              </View>
+            </View>
+          </View>
+          <ChevronRight size={20} color="white" />
+        </View>
+      ))}
+    </View>
+  ), [user?.warehouseId]);
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
       <StatusBar barStyle="dark-content" />
 
       {/* Header */}
-      <View className="bg-yellow-500 px-6 py-4">
+      <View className="bg-yellow-500 pt-12 pb-6 px-6 rounded-b-[32px]">
         <View className="flex-row items-center justify-between">
           <TouchableOpacity
             onPress={() => router.back()}
@@ -195,9 +389,7 @@ const AddProductPage = () => {
           >
             <ArrowLeft color="#f9fafb" size={24} />
           </TouchableOpacity>
-          <Text className="text-white text-lg font-bold">
-            Add New Product
-          </Text>
+          <Text className="text-white text-lg font-bold">Add New Product</Text>
           <View className="w-10" />
         </View>
       </View>
@@ -210,210 +402,11 @@ const AddProductPage = () => {
         <ScrollView
           className="flex-1 px-6 mb-16"
           showsVerticalScrollIndicator={false}
-          >
-          {/* Image Picker */}
-          <View className="items-center my-6">
-            <TouchableOpacity
-              onPress={pickImage}
-              disabled={imageLoading}
-              className="w-40 h-40 bg-white rounded-3xl items-center justify-center border border-yellow-500 overflow-hidden"
-            >
-              {imageLoading ? (
-                <LoadingSpinner />
-              ) : formData.image ? (
-                <View className="relative w-full h-full">
-                  <Image
-                    source={{ uri: formData.image }}
-                    className="w-full h-full"
-                    resizeMode="cover"
-                  />
-                  <TouchableOpacity
-                    onPress={() => updateFormField("image", "")}
-                    className="absolute top-2 right-2 w-8 h-8 bg-yellow-500 rounded-full items-center justify-center"
-                  >
-                    <X size={16} color="white" />
-                  </TouchableOpacity>
-                </View>
-              ) : (
-                <View className="items-center">
-                  <Camera size={48} color="#eab308" />
-                  <Text className="text-gray-500 text-sm mt-2">
-                    Add Product Photo
-                  </Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          </View>
-
-          {/* Product Type Selection */}
-          <View className="mb-6">
-            <Text className="text-gray-700 font-medium mb-2">Product Type</Text>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingRight: 20 }}
-            >
-              {PRODUCT_TYPES.map((type) => (
-                <TouchableOpacity
-                  key={type}
-                  onPress={() => updateFormField("type", type)}
-                  className={`mr-3 px-6 py-3 rounded-xl border ${
-                    formData.type === type
-                      ? "bg-yellow-500 border-yellow-500"
-                      : "bg-white border-gray-100"
-                  }`}
-                >
-                  <Text
-                    className={`${
-                      formData.type === type ? "text-white" : "text-gray-700"
-                    } font-medium`}
-                  >
-                    {type}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-            {errors.type && <ErrorMessage message={errors.type} />}
-          </View>
-
-          {/* Form Fields */}
-          <View className="space-y-4">
-            <View>
-              <Text className="text-gray-700 font-medium mb-2">Product Name</Text>
-              <Input
-                leftIcon={Package}
-                placeholder="Enter product name"
-                value={formData.name}
-                onChangeText={(text) => updateFormField("name", text)}
-                containerClassName={`border ${
-                  errors.name ? "border-red-500" : "border-gray-100"
-                } py-1`}
-              />
-              {errors.name && <ErrorMessage message={errors.name} />}
-            </View>
-
-            <View>
-              <Text className="text-gray-700 font-medium mb-2">Barcode</Text>
-              <Input
-                leftIcon={Barcode}
-                placeholder="Enter product barcode"
-                value={formData.barcode}
-                onChangeText={(text) => updateFormField("barcode", text)}
-                containerClassName={`border ${
-                  errors.barcode ? "border-red-500" : "border-gray-100"
-                } py-1`}
-              />
-              {errors.barcode && <ErrorMessage message={errors.barcode} />}
-            </View>
-
-            <View>
-              <Text className="text-gray-700 font-medium mb-2">Price</Text>
-              <Input
-                leftIcon={DollarSign}
-                placeholder="Enter product price"
-                value={formData.price}
-                onChangeText={(text) => updateFormField("price", text)}
-                keyboardType="numeric"
-                containerClassName={`border ${
-                  errors.price ? "border-red-500" : "border-gray-100"
-                } py-1`}
-              />
-              {errors.price && <ErrorMessage message={errors.price} />}
-            </View>
-
-            <View>
-              <Text className="text-gray-700 font-medium mb-2">Supplier</Text>
-              <Input
-                leftIcon={Building2}
-                placeholder="Enter supplier name"
-                value={formData.supplier}
-                onChangeText={(text) => updateFormField("supplier", text)}
-                containerClassName={`border ${
-                  errors.supplier ? "border-red-500" : "border-gray-100"
-                } py-1`}
-              />
-              {errors.supplier && <ErrorMessage message={errors.supplier} />}
-            </View>
-
-            <View>
-              <Text className="text-gray-700 font-medium mb-2">Quantity</Text>
-              <Input
-                leftIcon={Archive}
-                placeholder="Enter product quantity"
-                value={formData.quantity}
-                onChangeText={(text) => updateFormField("quantity", text)}
-                keyboardType="numeric"
-                containerClassName={`border ${
-                  errors.quantity ? "border-red-500" : "border-gray-100"
-                } py-1`}
-              />
-              {errors.quantity && <ErrorMessage message={errors.quantity} />}
-            </View>
-          </View>
-
-          {/* Warehouse Selection */}
-          <View className="mb-6">
-            <Text className="text-gray-700 font-medium mb-2">
-              Select Warehouse
-            </Text>
-            {WAREHOUSES.map((warehouse) => (
-              <TouchableOpacity
-                key={warehouse.id}
-                onPress={() => updateFormField("warehouse", warehouse.id)}
-                className={`mb-3 p-4 rounded-xl flex-row items-center justify-between ${
-                  formData.warehouse === warehouse.id
-                    ? "bg-yellow-500"
-                    : "bg-white border border-gray-100"
-                }`}
-              >
-                <View className="flex-row items-center">
-                  <Warehouse
-                    size={20}
-                    color={
-                      formData.warehouse === warehouse.id ? "white" : "#eab308"
-                    }
-                  />
-                  <View className="ml-3">
-                    <Text
-                      className={`${
-                        formData.warehouse === warehouse.id
-                          ? "text-white"
-                          : "text-gray-900"
-                      } font-medium`}
-                    >
-                      {warehouse.name}
-                    </Text>
-                    <View className="flex-row items-center mt-1">
-                      <MapPin
-                        size={14}
-                        color={
-                          formData.warehouse === warehouse.id
-                            ? "#FEF9C3"
-                            : "#9CA3AF"
-                        }
-                      />
-                      <Text
-                        className={`${
-                          formData.warehouse === warehouse.id
-                            ? "text-yellow-100"
-                            : "text-gray-500"
-                        } ml-1`}
-                      >
-                        {warehouse.city}
-                      </Text>
-                    </View>
-                  </View>
-                </View>
-                <ChevronRight
-                  size={20}
-                  color={
-                    formData.warehouse === warehouse.id ? "white" : "#6B7280"
-                  }
-                />
-              </TouchableOpacity>
-            ))}
-            {errors.warehouse && <ErrorMessage message={errors.warehouse} />}
-          </View>
+        >
+          {renderImagePicker}
+          {renderProductTypeSelection}
+          {renderFormFields}
+          {renderWarehouseSelection}
         </ScrollView>
       </KeyboardAvoidingView>
 
