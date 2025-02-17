@@ -1,7 +1,6 @@
 {
   "products": [
     {
-      "id": "1",
       "name": "Laptop HP Pavilion",
       "type": "Informatique",
       "barcode": "1234567890123",
@@ -13,7 +12,7 @@
         {
           "id": 1999,
           "name": "Gueliz B2",
-          "quantity": 21,
+          "quantity": 23,
           "localisation": {
             "city": "Marrakesh",
             "latitude": 31.628674,
@@ -33,6 +32,14 @@
       ],
       "editedBy": [
         {
+          "warehousemanId": 1333,
+          "at": "2025-02-17"
+        },
+        {
+          "warehousemanId": 1333,
+          "at": "2025-02-17"
+        },
+        {
           "warehousemanId": 1444,
           "at": "2025-02-16"
         },
@@ -48,7 +55,8 @@
           "warehousemanId": 1333,
           "at": "2025-02-02"
         }
-      ]
+      ],
+      "id": "1"
     },
     {
       "id": "2",
