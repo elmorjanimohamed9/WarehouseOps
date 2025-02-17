@@ -64,8 +64,80 @@ const WAREHOUSES = [
   { id: "2991", name: "Lazari H2", city: "Oujda" },
 ];
 
+interface Statistics {
+  totalProducts: number;
+  outOfStock: number;
+  totalStockValue: number;
+  mostAddedProducts: any[];
+  mostRemovedProducts: any[];
+}
+
+export const useGlobalStatistics = () => {
+  const calculateStatistics = useCallback((products: Product[]): Statistics => {
+    if (!Array.isArray(products)) {
+      throw new Error('Products must be an array');
+    }
+    
+    return {
+      totalProducts: products.length,
+      outOfStock: products.filter(product => 
+        !product.stocks || product.stocks.length === 0 || 
+        product.stocks.every(stock => stock.quantity === 0)
+      ).length,
+      totalStockValue: products.reduce((total, product) => {
+        const stockQuantity = product.stocks?.reduce((sum, stock) => 
+          sum + (stock.quantity || 0), 0) || 0;
+        return total + (stockQuantity * (product.price || 0));
+      }, 0),
+      mostAddedProducts: [], 
+      mostRemovedProducts: [] 
+    };
+  }, []);
+
+  const updateGlobalStatistics = async (newProduct: Product) => {
+    try {
+      // 1. Fetch current statistics
+      const response = await fetch('http://172.16.11.195:3000/statistics');
+      if (!response.ok) {
+        throw new Error('Failed to fetch statistics');
+      }
+      
+      const currentStats = await response.json();
+      
+      const updatedStats = {
+        ...currentStats,
+        totalProducts: (currentStats.totalProducts || 0) + 1,
+        outOfStock: currentStats.outOfStock,
+        totalStockValue: currentStats.totalStockValue,
+        mostAddedProducts: currentStats.mostAddedProducts,
+        mostRemovedProducts: currentStats.mostRemovedProducts
+      };
+  
+      const updateResponse = await fetch('http://172.16.11.195:3000/statistics', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedStats)
+      });
+  
+      if (!updateResponse.ok) {
+        throw new Error('Failed to update statistics');
+      }
+  
+      return updatedStats;
+    } catch (error) {
+      console.error('Error updating statistics:', error);
+      throw error;
+    }
+  };
+
+  return { updateGlobalStatistics, calculateStatistics };
+};
 const AddProductPage = () => {
   const router = useRouter();
+  const { updateGlobalStatistics } = useGlobalStatistics();
+
   const { addProduct } = useProducts();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -188,6 +260,8 @@ const AddProductPage = () => {
       };
 
       await addProduct(newProduct);
+      await updateGlobalStatistics(newProduct);
+
       Alert.alert("Success", "Product added successfully", [
         { text: "OK", onPress: () => router.back() },
       ]);
