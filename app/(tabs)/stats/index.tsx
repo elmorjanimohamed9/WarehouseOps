@@ -9,6 +9,8 @@ import {
 } from 'lucide-react-native';
 import { Statistics } from "@/types/home.types";
 
+const API_URL = process.env.EXPO_PUBLIC_API_URL;
+
 const StatsScreen = () => {
   const [recentActivity, setRecentActivity] = useState([]);
   const [statistics, setStatistics] = useState<Statistics | null>(null);
@@ -19,7 +21,7 @@ const StatsScreen = () => {
 
   const fetchStatistics = async () => {
     try {
-      const response = await fetch('http://192.168.43.247:3000/statistics');
+      const response = await fetch(`${API_URL}/statistics`);
       const data = await response.json();
       setStatistics(data);
     } catch (error) {

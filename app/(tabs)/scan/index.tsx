@@ -263,7 +263,7 @@ const ScanScreen: React.FC = () => {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`${API_URL}?barcode=${barcodeValue}`);
+      const response = await fetch(`${API_URL}/products?barcode=${barcodeValue}`);
       if (!response.ok) throw new Error("Product search failed");
 
       const data: Product[] = await response.json();

@@ -26,7 +26,7 @@ import {
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Product } from "@/types/product";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
-import { QuantityEditModal } from "@/components/products/QuantityEditModal";
+import QuantityEditModal from "@/components/products/QuantityEditModal";
 import { useAuth } from "@/hooks/useAuth";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
