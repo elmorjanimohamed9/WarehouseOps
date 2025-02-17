@@ -32,8 +32,12 @@ const SettingsScreen = () => {
 
   const handleExportReport = async () => {
     try {
-      const html = generateProductsHTML(products);
-
+      const html = generateProductsHTML(products, {
+        title: 'Warehouse Inventory Report',
+        currency: 'MAD',
+        primaryColor: '#eab308'
+      });
+  
       const { uri } = await Print.printToFileAsync({
         html,
         base64: false
@@ -43,7 +47,7 @@ const SettingsScreen = () => {
         UTI: '.pdf',
         mimeType: 'application/pdf'
       });
-
+  
     } catch (error) {
       console.error('Error generating report:', error);
       Alert.alert('Error', 'Failed to generate report');
