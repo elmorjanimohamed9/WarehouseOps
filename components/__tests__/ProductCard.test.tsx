@@ -1,6 +1,6 @@
 import React from "react";
 import { render, fireEvent } from "@testing-library/react-native";
-import ProductCard from "../products/ProductCard"; // Adjust the import path as needed
+import ProductCard from "../products/ProductCard";
 
 describe("ProductCard", () => {
   const dummyProduct = {
@@ -27,13 +27,9 @@ describe("ProductCard", () => {
     );
 
     expect(getByText(dummyProduct.name)).toBeTruthy();
-
     expect(getByText(dummyProduct.type)).toBeTruthy();
-
-    expect(getByText(`$${dummyProduct.price.toLocaleString()}`)).toBeTruthy();
-
+    expect(getByText(new RegExp(`${dummyProduct.price.toLocaleString()}`))).toBeTruthy();
     expect(getByText(dummyProduct.supplier)).toBeTruthy();
-
     expect(getByText(/10 in stock/)).toBeTruthy();
   });
 

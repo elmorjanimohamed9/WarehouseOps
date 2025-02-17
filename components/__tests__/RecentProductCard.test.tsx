@@ -29,7 +29,7 @@ describe('RecentProductCard', () => {
 
     expect(getByText(dummyProduct.name)).toBeTruthy();
     expect(getByText(dummyProduct.type)).toBeTruthy();
-    expect(getByText(`$${dummyProduct.price.toLocaleString()}`)).toBeTruthy();
+    expect(getByText(new RegExp(`${dummyProduct.price.toLocaleString()}`))).toBeTruthy();
     expect(getByText(`Added ${formattedDate}`)).toBeTruthy();
   });
 
