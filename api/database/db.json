@@ -259,11 +259,11 @@
   "warehousemans": [
     {
       "id": "1333",
-      "image": "https://images.unsplash.com/photo-1607990281513-2c110a25bd8c?w=400&h=400&fit=crop",
       "name": "Amine Boutaleb",
-      "dob": "1988-05-02",
       "city": "Oujda",
+      "dob": "1988-05-02",
       "secretKey": "AH90907J",
+      "image": "https://images.unsplash.com/photo-1607990281513-2c110a25bd8c?w=400&h=400&fit=crop",
       "warehouseId": 1999
     },
     {
@@ -276,11 +276,58 @@
       "warehouseId": 2991
     }
   ],
+  
   "statistics": {
-    "totalProducts": 7,
+    "totalProducts": 8,
     "outOfStock": 1,
-    "totalStockValue": 160,
-    "mostAddedProducts": [],
-    "mostRemovedProducts": []
+    "totalStockValue": 160000,
+    "mostAddedProducts": [
+      {
+        "id": "5",
+        "name": "AirPods Pro 2",
+        "quantity": 34,
+        "trend": 15
+      },
+      {
+        "id": "6",
+        "name": "Samsung S24 Ultra",
+        "quantity": 47,
+        "trend": 12
+      },
+      {
+        "id": "1",
+        "name": "Laptop HP Pavilion",
+        "quantity": 55,
+        "trend": 8
+      }
+    ],
+    "mostRemovedProducts": [
+      {
+        "id": "4",
+        "name": "MacBook Pro M3",
+        "quantity": 8,
+        "trend": -5
+      },
+      {
+        "id": "7",
+        "name": "PlayStation 5",
+        "quantity": 5,
+        "trend": -3
+      }
+    ],
+    "categoryDistribution": {
+      "Informatique": 3,
+      "Smartphone": 1,
+      "Gaming": 1,
+      "Accessoires": 2
+    },
+    "stockHistory": {
+      "labels": ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+      "data": [120, 145, 132, 160, 158, 160]
+    },
+    "valueHistory": {
+      "labels": ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+      "data": [120000, 135000, 142000, 155000, 158000, 160000]
+    }
   }
 }
