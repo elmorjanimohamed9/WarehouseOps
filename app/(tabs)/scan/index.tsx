@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -11,9 +11,6 @@ import {
 } from "react-native";
 import {
   Barcode,
-  PackageCheck,
-  PackagePlus,
-  AlertCircle,
   ArrowLeft,
   Camera,
   X,
@@ -26,6 +23,7 @@ import {
   BarcodeScanningResult,
 } from "expo-camera";
 import { router } from "expo-router";
+import { Alert } from "@/components/common/Alert";
 
 type VibrationPattern = number | number[];
 
@@ -46,6 +44,28 @@ interface IconButtonProps {
   className?: string;
 }
 
+interface CameraPreviewProps {
+  scanned: boolean;
+  onBarcodeScanned: (result: BarcodeScanningResult) => void;
+  isActive: boolean;
+}
+
+interface InputModalProps {
+  visible: boolean;
+  onClose: () => void;
+  barcode: string;
+  setBarcode: (value: string) => void;
+  onSubmit: () => void;
+  loading: boolean;
+}
+
+interface ResultModalProps {
+  visible: boolean;
+  onClose: () => void;
+  product: Product | null;
+  barcode: string;
+}
+
 const IconButton: React.FC<IconButtonProps> = ({
   icon: Icon,
   onPress,
@@ -62,39 +82,25 @@ const IconButton: React.FC<IconButtonProps> = ({
   </TouchableOpacity>
 );
 
-interface BaseModalProps {
+const BaseModal: React.FC<{
   visible: boolean;
   onClose: () => void;
   children: React.ReactNode;
-}
-
-const BaseModal: React.FC<BaseModalProps> = ({
-  visible,
-  onClose,
-  children,
-}) => (
-  <Modal
-    visible={visible}
-    animationType="fade"
-    transparent
-    onRequestClose={onClose}
-  >
+}> = ({ visible, onClose, children }) => (
+  <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
     <View className="flex-1 bg-black/90 justify-center items-center p-6">
       <View className="w-full max-w-md bg-white rounded-2xl p-6">
+        <TouchableOpacity
+          onPress={onClose}
+          className="absolute right-4 top-4 z-10"
+        >
+          <X size={24} color="#6b7280" />
+        </TouchableOpacity>
         {children}
       </View>
     </View>
   </Modal>
 );
-
-interface InputModalProps {
-  visible: boolean;
-  onClose: () => void;
-  barcode: string;
-  setBarcode: (value: string) => void;
-  onSubmit: () => void;
-  loading: boolean;
-}
 
 const InputModal: React.FC<InputModalProps> = ({
   visible,
@@ -105,34 +111,21 @@ const InputModal: React.FC<InputModalProps> = ({
   loading,
 }) => (
   <BaseModal visible={visible} onClose={onClose}>
-    <View className="flex-row justify-between items-center mb-6">
-      <Text className="text-xl font-bold text-gray-900">Enter Barcode</Text>
-      <IconButton
-        icon={X}
-        onPress={onClose}
-        color="#6b7280"
-        bgColor="bg-transparent"
-      />
-    </View>
-    <View className="bg-gray-50 rounded-xl px-4 mb-6 flex-row items-center">
-      <Barcode size={20} color="#eab308" />
-      <TextInput
-        className="flex-1 h-12 ml-3 text-base text-gray-900"
-        placeholder="Enter barcode number"
-        placeholderTextColor="#9ca3af"
-        value={barcode}
-        onChangeText={setBarcode}
-        keyboardType="numeric"
-        maxLength={13}
-        autoFocus
-        returnKeyType="search"
-        onSubmitEditing={onSubmit}
-      />
-    </View>
+    <Text className="text-xl font-bold text-gray-900 mb-6">
+      Enter Barcode Manually
+    </Text>
+    <TextInput
+      value={barcode}
+      onChangeText={setBarcode}
+      placeholder="Enter barcode number"
+      keyboardType="numeric"
+      className="bg-gray-100 p-4 rounded-xl text-gray-900 text-lg mb-6"
+      placeholderTextColor="#9ca3af"
+    />
     <TouchableOpacity
-      className={`bg-yellow-500 p-4 rounded-xl ${loading ? "opacity-50" : ""}`}
       onPress={onSubmit}
       disabled={loading}
+      className={`p-4 rounded-xl ${loading ? "bg-yellow-400" : "bg-yellow-500"}`}
     >
       {loading ? (
         <ActivityIndicator color="white" />
@@ -143,13 +136,6 @@ const InputModal: React.FC<InputModalProps> = ({
   </BaseModal>
 );
 
-interface ResultModalProps {
-  visible: boolean;
-  onClose: () => void;
-  product: Product | null;
-  barcode: string;
-}
-
 const ResultModal: React.FC<ResultModalProps> = ({
   visible,
   onClose,
@@ -157,66 +143,92 @@ const ResultModal: React.FC<ResultModalProps> = ({
   barcode,
 }) => (
   <BaseModal visible={visible} onClose={onClose}>
-    <View className="items-center mb-6">
-      {product ? (
-        <PackageCheck size={48} color="#eab308" />
-      ) : (
-        <PackagePlus size={48} color="#eab308" />
-      )}
-    </View>
-    <Text className="text-xl font-bold text-center text-gray-900 mb-2">
-      {product ? "Product Found" : "Product Not Found"}
-    </Text>
-    <Text className="text-gray-500 text-center mb-6">
-      {product
-        ? "This product already exists in the database."
-        : "Would you like to add this product?"}
-    </Text>
-    <View className="flex-row gap-4">
-      <TouchableOpacity
-        className="flex-1 bg-gray-100 p-4 rounded-xl"
-        onPress={onClose}
-      >
-        <Text className="text-gray-600 text-center font-medium">Cancel</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        className="flex-1 bg-yellow-500 p-4 rounded-xl"
-        onPress={() => {
-          onClose();
-          product
-            ? router.push(`/products/${product.id}`)
-            : router.push({ pathname: "/products/add", params: { barcode } });
-        }}
-      >
-        <Text className="text-white text-center font-medium">
-          {product ? "View Details" : "Add Product"}
+    {product ? (
+      <>
+        <Text className="text-xl font-bold text-gray-900 mb-6">
+          Product Found
         </Text>
-      </TouchableOpacity>
-    </View>
+        <View className="bg-gray-50 rounded-xl p-4 mb-6">
+          <Text className="text-base font-medium text-gray-900">
+            {product.name}
+          </Text>
+          <Text className="text-sm text-gray-500 mt-1">{product.barcode}</Text>
+        </View>
+        <TouchableOpacity
+          className="bg-yellow-500 p-4 rounded-xl"
+          onPress={() => {
+            router.push(`/products/${product.id}`);
+            onClose();
+          }}
+        >
+          <Text className="text-white text-center font-medium">View Details</Text>
+        </TouchableOpacity>
+      </>
+    ) : (
+      <>
+        <Text className="text-xl font-bold text-gray-900 mb-6">
+          Product Not Found
+        </Text>
+        <View className="bg-gray-50 rounded-xl p-4 mb-6">
+          <Text className="text-base text-gray-500">
+            No product found with barcode:
+          </Text>
+          <Text className="text-lg font-medium text-gray-900 mt-1">
+            {barcode}
+          </Text>
+        </View>
+        <TouchableOpacity
+          className="bg-yellow-500 p-4 rounded-xl"
+          onPress={() => {
+            router.push(`/products/add?barcode=${barcode}`);
+            onClose();
+          }}
+        >
+          <Text className="text-white text-center font-medium">
+            Add New Product
+          </Text>
+        </TouchableOpacity>
+      </>
+    )}
   </BaseModal>
 );
-
-interface CameraPreviewProps {
-  scanned: boolean;
-  onBarcodeScanned: (scanningResult: BarcodeScanningResult) => void;
-  isActive: boolean;
-}
 
 const CameraPreview: React.FC<CameraPreviewProps> = ({
   scanned,
   onBarcodeScanned,
   isActive,
 }) => {
-  const [permission] = useCameraPermissions();
+  const [permission, requestPermission] = useCameraPermissions();
 
-  if (!permission?.granted) return null;
+  useEffect(() => {
+    requestPermission();
+  }, []);
 
-  return isActive ? (
+  if (!permission?.granted) {
+    return (
+      <View className="flex-1 justify-center items-center bg-black/20">
+        <Text className="text-white text-center mb-4">
+          We need camera permission to scan barcodes
+        </Text>
+      </View>
+    );
+  }
+
+  if (!isActive) {
+    return (
+      <View className="flex-1 justify-center items-center bg-black/20">
+        <CameraOff size={48} color="#ffffff" opacity={0.5} />
+        <Text className="text-white mt-4 opacity-50">Camera is disabled</Text>
+      </View>
+    );
+  }
+
+  return (
     <CameraView
       className="flex-1"
       facing="back"
       barcodeScannerSettings={{
-        barcodeTypes: ["qr", "ean13", "ean8", "upc_a", "upc_e"],
+        barCodeTypes: ["ean13", "ean8", "upc_a", "upc_e"],
       }}
       onBarcodeScanned={scanned ? undefined : onBarcodeScanned}
     >
@@ -230,22 +242,37 @@ const CameraPreview: React.FC<CameraPreviewProps> = ({
         </View>
       </View>
     </CameraView>
-  ) : (
-    <View className="flex-1 justify-center items-center bg-black">
-      <Text className="text-yellow-500 text-center">Camera Disabled</Text>
-    </View>
   );
 };
 
-const ScanScreen: React.FC = () => {
-  const [barcode, setBarcode] = useState<string>("");
-  const [scanned, setScanned] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [showResultModal, setShowResultModal] = useState<boolean>(false);
-  const [showInputModal, setShowInputModal] = useState<boolean>(false);
+const ScanScreen = () => {
+  const [barcode, setBarcode] = useState("");
+  const [scanned, setScanned] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [showResultModal, setShowResultModal] = useState(false);
+  const [showInputModal, setShowInputModal] = useState(false);
   const [product, setProduct] = useState<Product | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isCameraActive, setIsCameraActive] = useState<boolean>(true);
+  const [isCameraActive, setIsCameraActive] = useState(true);
+  const [alertConfig, setAlertConfig] = useState({
+    type: "error" as "success" | "error" | "warning" | "info",
+    title: "",
+    message: "",
+    isVisible: false,
+  });
+
+  const showAlert = (
+    type: "success" | "error" | "warning" | "info",
+    title: string,
+    message: string
+  ) => {
+    setAlertConfig({
+      type,
+      title,
+      message,
+      isVisible: true,
+    });
+  };
 
   const triggerVibration = (pattern: VibrationPattern) =>
     Vibration.vibrate(pattern);
@@ -264,9 +291,11 @@ const ScanScreen: React.FC = () => {
       setError(null);
 
       const response = await fetch(`${API_URL}/products?barcode=${barcodeValue}`);
-      if (!response.ok) throw new Error("Product search failed");
+      if (!response.ok) {
+        throw new Error("Product search failed");
+      }
 
-      const data: Product[] = await response.json();
+      const data = await response.json();
       handleSearchResult(data, barcodeValue);
     } catch (err) {
       handleSearchError(err);
@@ -281,10 +310,20 @@ const ScanScreen: React.FC = () => {
       triggerVibration(100);
       setProduct(data[0]);
       setShowResultModal(true);
+      showAlert(
+        "success",
+        "Product Found",
+        "Product successfully located in database"
+      );
     } else {
       triggerVibration([100, 100, 100]);
       setShowResultModal(true);
       setError("Product not found");
+      showAlert(
+        "warning",
+        "Product Not Found",
+        "This product is not in our database"
+      );
     }
   };
 
@@ -292,12 +331,22 @@ const ScanScreen: React.FC = () => {
     console.error("Server connection error", err);
     triggerVibration([100, 200, 100]);
     setError("Server connection error");
+    showAlert(
+      "error",
+      "Connection Error",
+      "Failed to connect to the server. Please try again."
+    );
   };
 
   const handleManualSearch = () => {
     if (barcode.length < 8) {
       setError("Barcode must contain at least 8 digits");
       triggerVibration([100, 200, 100]);
+      showAlert(
+        "error",
+        "Invalid Barcode",
+        "Barcode must contain at least 8 digits"
+      );
       return;
     }
     Keyboard.dismiss();
@@ -362,13 +411,6 @@ const ScanScreen: React.FC = () => {
             Position barcode within frame to scan
           </Text>
         </View>
-
-        {error && (
-          <View className="mt-4 w-full max-w-md bg-red-50 border border-red-100 rounded-xl p-4 flex-row items-center mx-auto">
-            <AlertCircle size={20} color="#ef4444" />
-            <Text className="ml-3 text-red-600 flex-1">{error}</Text>
-          </View>
-        )}
       </View>
 
       {/* Modals */}
@@ -391,6 +433,15 @@ const ScanScreen: React.FC = () => {
         }}
         product={product}
         barcode={barcode}
+      />
+
+      {/* Alert Component */}
+      <Alert
+        type={alertConfig.type}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        isVisible={alertConfig.isVisible}
+        onClose={() => setAlertConfig((prev) => ({ ...prev, isVisible: false }))}
       />
     </View>
   );

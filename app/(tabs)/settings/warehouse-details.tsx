@@ -26,7 +26,7 @@ import { RootState } from "@/store/store";
 import { Product } from "@/types/product";
 import QuickActionButton from "@/components/common/QuickActionButton";
 import StatCard from "@/components/common/StatCard";
-import { LoadingSpinner }from "@/components/common/LoadingSpinner";
+import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -228,7 +228,7 @@ const WarehouseDetailsScreen = () => {
             title="Stock Management"
             subtitle="Update inventory levels"
             color="#6366f1"
-            onPress={() => router.push("/stock-management")}
+            onPress={() => router.push("/settings/stock-management")}
           />
           <QuickActionButton
             icon={Users}

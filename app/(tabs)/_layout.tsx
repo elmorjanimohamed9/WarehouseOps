@@ -8,6 +8,7 @@ const TabLayout = () => {
   const pathname = usePathname();
   const isAddProductPage = pathname.includes('/products/add');
   const isScanPage = pathname.includes('/scan');
+  const isProfileInformationPage = pathname.includes('/settings/profile-information');
 
   return (
     <Tabs
@@ -25,7 +26,7 @@ const TabLayout = () => {
           height: 60,
           paddingBottom: 10,
           zIndex: 1,
-          display: isAddProductPage || isScanPage ? 'none' : 'flex',
+          display: isAddProductPage || isScanPage || isProfileInformationPage ? 'none' : 'flex',
         },
         tabBarActiveTintColor: '#eab308',
         tabBarInactiveTintColor: '#9ca3af',

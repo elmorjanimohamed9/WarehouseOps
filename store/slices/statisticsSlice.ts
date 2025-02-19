@@ -1,4 +1,3 @@
-// statisticsSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { statisticsApi } from '@/api/statisticsApi';
 
@@ -30,8 +29,19 @@ export const fetchGeneralStatistics = createAsyncThunk(
   'statistics/fetchGeneralStatistics',
   async (_, { rejectWithValue }) => {
     try {
-      const data = await statisticsApi.getGeneralStatistics();
-      return data.statistics; 
+      const [totalProducts, outOfStock, totalStockValue] = await Promise.all([
+        statisticsApi.getTotalProducts(),
+        statisticsApi.getOutOfStock(),
+        statisticsApi.getTotalStockValue()
+      ]);
+
+      return {
+        totalProducts,
+        outOfStock,
+        totalStockValue,
+        mostAddedProducts: [],
+        mostRemovedProducts: []
+      };
     } catch (error: any) {
       return rejectWithValue(error.message);
     }
