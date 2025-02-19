@@ -95,7 +95,7 @@ const ActionButtons: React.FC<{
   onSave: () => void;
   isLoading?: boolean;
 }> = ({ onCancel, onSave, isLoading }) => (
-  <View className="flex-row space-x-3">
+  <View className="flex-row gap-4">
     <TouchableOpacity
       onPress={onCancel}
       className="flex-1 p-4 rounded-2xl bg-gray-100 items-center"
