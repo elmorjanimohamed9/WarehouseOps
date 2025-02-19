@@ -25,15 +25,16 @@ import {
   Camera,
   X,
 } from "lucide-react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { BlurView } from "expo-blur";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { ErrorMessage } from "@/components/common/ErrorMessage";
-import { Product } from "@/types/product";
+import { SuccessPage } from "@/components/common/SuccessPage";
 import Input from "@/components/common/Input";
 import { useProducts } from "@/hooks/useProducts";
 import { useAuth } from "@/hooks/useAuth";
+import { Product } from "@/types/product";
 
 interface FormData {
   name: string;
@@ -64,94 +65,25 @@ const WAREHOUSES = [
   { id: "2991", name: "Lazari H2", city: "Oujda" },
 ];
 
-interface Statistics {
-  totalProducts: number;
-  outOfStock: number;
-  totalStockValue: number;
-  mostAddedProducts: any[];
-  mostRemovedProducts: any[];
-}
-
-export const useGlobalStatistics = () => {
-  const calculateStatistics = useCallback((products: Product[]): Statistics => {
-    if (!Array.isArray(products)) {
-      throw new Error('Products must be an array');
-    }
-    
-    return {
-      totalProducts: products.length,
-      outOfStock: products.filter(product => 
-        !product.stocks || product.stocks.length === 0 || 
-        product.stocks.every(stock => stock.quantity === 0)
-      ).length,
-      totalStockValue: products.reduce((total, product) => {
-        const stockQuantity = product.stocks?.reduce((sum, stock) => 
-          sum + (stock.quantity || 0), 0) || 0;
-        return total + (stockQuantity * (product.price || 0));
-      }, 0),
-      mostAddedProducts: [], 
-      mostRemovedProducts: [] 
-    };
-  }, []);
-
-  const updateGlobalStatistics = async (newProduct: Product) => {
-    try {
-      // 1. Fetch current statistics
-      const response = await fetch('http://172.16.11.195:3000/statistics');
-      if (!response.ok) {
-        throw new Error('Failed to fetch statistics');
-      }
-      
-      const currentStats = await response.json();
-      
-      const updatedStats = {
-        ...currentStats,
-        totalProducts: (currentStats.totalProducts || 0) + 1,
-        outOfStock: currentStats.outOfStock,
-        totalStockValue: currentStats.totalStockValue,
-        mostAddedProducts: currentStats.mostAddedProducts,
-        mostRemovedProducts: currentStats.mostRemovedProducts
-      };
-  
-      const updateResponse = await fetch('http://172.16.11.195:3000/statistics', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updatedStats)
-      });
-  
-      if (!updateResponse.ok) {
-        throw new Error('Failed to update statistics');
-      }
-  
-      return updatedStats;
-    } catch (error) {
-      console.error('Error updating statistics:', error);
-      throw error;
-    }
-  };
-
-  return { updateGlobalStatistics, calculateStatistics };
-};
 const AddProductPage = () => {
   const router = useRouter();
-  const { updateGlobalStatistics } = useGlobalStatistics();
-
+  const params = useLocalSearchParams();
   const { addProduct } = useProducts();
   const { user } = useAuth();
+
+  // All state hooks
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState<FormData>(INITIAL_FORM_STATE);
   const [imageLoading, setImageLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
-  const updateFormField = useCallback(
-    (field: keyof FormData, value: string) => {
-      setFormData((prev) => ({ ...prev, [field]: value }));
-      setErrors((prev) => ({ ...prev, [field]: "" }));
-    },
-    []
-  );
+  // Effect hooks
+  useEffect(() => {
+    if (params.barcode) {
+      updateFormField("barcode", params.barcode as string);
+    }
+  }, [params.barcode]);
 
   useEffect(() => {
     if (user?.warehouseId) {
@@ -162,12 +94,20 @@ const AddProductPage = () => {
         updateFormField('warehouse', userWarehouse.id);
       }
     }
-  }, [user, updateFormField]);
+  }, [user]);
+
+  // Callback hooks
+  const updateFormField = useCallback(
+    (field: keyof FormData, value: string) => {
+      setFormData((prev) => ({ ...prev, [field]: value }));
+      setErrors((prev) => ({ ...prev, [field]: "" }));
+    },
+    []
+  );
 
   const pickImage = async () => {
     try {
-      const { status } =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
       if (status !== "granted") {
         Alert.alert(
@@ -253,18 +193,14 @@ const AddProductPage = () => {
         ],
         editedBy: [
           {
-            warehousemanId: 1333,
+            warehousemanId: user?.id || 0,
             at: new Date().toISOString(),
           },
         ],
       };
 
       await addProduct(newProduct);
-      await updateGlobalStatistics(newProduct);
-
-      Alert.alert("Success", "Product added successfully", [
-        { text: "OK", onPress: () => router.back() },
-      ]);
+      setShowSuccess(true);
     } catch (error) {
       Alert.alert("Error", "Failed to add product. Please try again.");
       console.error("Error adding product:", error);
@@ -273,6 +209,7 @@ const AddProductPage = () => {
     }
   };
 
+  // Memoized components
   const renderImagePicker = useMemo(() => (
     <View className="items-center my-6">
       <TouchableOpacity
@@ -306,7 +243,7 @@ const AddProductPage = () => {
         )}
       </TouchableOpacity>
     </View>
-  ), [formData.image, imageLoading, pickImage, updateFormField]);
+  ), [formData.image, imageLoading]);
 
   const renderProductTypeSelection = useMemo(() => (
     <View className="mb-6">
@@ -320,16 +257,14 @@ const AddProductPage = () => {
           <TouchableOpacity
             key={type}
             onPress={() => updateFormField("type", type)}
-            className={`mr-3 px-6 py-3 rounded-xl border ${
-              formData.type === type
+            className={`mr-3 px-6 py-3 rounded-xl border ${formData.type === type
                 ? "bg-yellow-500 border-yellow-500"
                 : "bg-white border-gray-100"
-            }`}
+              }`}
           >
             <Text
-              className={`${
-                formData.type === type ? "text-white" : "text-gray-700"
-              } font-medium`}
+              className={`${formData.type === type ? "text-white" : "text-gray-700"
+                } font-medium`}
             >
               {type}
             </Text>
@@ -338,7 +273,7 @@ const AddProductPage = () => {
       </ScrollView>
       {errors.type && <ErrorMessage message={errors.type} />}
     </View>
-  ), [errors.type, formData.type, updateFormField]);
+  ), [errors.type, formData.type]);
 
   const renderFormFields = useMemo(() => (
     <View className="space-y-4">
@@ -351,9 +286,8 @@ const AddProductPage = () => {
           placeholder="Enter product name"
           value={formData.name}
           onChangeText={(text) => updateFormField("name", text)}
-          containerClassName={`border ${
-            errors.name ? "border-red-500" : "border-gray-100"
-          } py-1`}
+          containerClassName={`border ${errors.name ? "border-red-500" : "border-gray-100"
+            } py-1`}
         />
         {errors.name && <ErrorMessage message={errors.name} />}
       </View>
@@ -365,9 +299,8 @@ const AddProductPage = () => {
           placeholder="Enter product barcode"
           value={formData.barcode}
           onChangeText={(text) => updateFormField("barcode", text)}
-          containerClassName={`border ${
-            errors.barcode ? "border-red-500" : "border-gray-100"
-          } py-1`}
+          containerClassName={`border ${errors.barcode ? "border-red-500" : "border-gray-100"
+            } py-1`}
         />
         {errors.barcode && <ErrorMessage message={errors.barcode} />}
       </View>
@@ -380,9 +313,8 @@ const AddProductPage = () => {
           value={formData.price}
           onChangeText={(text) => updateFormField("price", text)}
           keyboardType="numeric"
-          containerClassName={`border ${
-            errors.price ? "border-red-500" : "border-gray-100"
-          } py-1`}
+          containerClassName={`border ${errors.price ? "border-red-500" : "border-gray-100"
+            } py-1`}
         />
         {errors.price && <ErrorMessage message={errors.price} />}
       </View>
@@ -394,9 +326,8 @@ const AddProductPage = () => {
           placeholder="Enter supplier name"
           value={formData.supplier}
           onChangeText={(text) => updateFormField("supplier", text)}
-          containerClassName={`border ${
-            errors.supplier ? "border-red-500" : "border-gray-100"
-          } py-1`}
+          containerClassName={`border ${errors.supplier ? "border-red-500" : "border-gray-100"
+            } py-1`}
         />
         {errors.supplier && <ErrorMessage message={errors.supplier} />}
       </View>
@@ -409,14 +340,13 @@ const AddProductPage = () => {
           value={formData.quantity}
           onChangeText={(text) => updateFormField("quantity", text)}
           keyboardType="numeric"
-          containerClassName={`border ${
-            errors.quantity ? "border-red-500" : "border-gray-100"
-          } py-1`}
+          containerClassName={`border ${errors.quantity ? "border-red-500" : "border-gray-100"
+            } py-1`}
         />
         {errors.quantity && <ErrorMessage message={errors.quantity} />}
       </View>
     </View>
-  ), [errors, formData, updateFormField]);
+  ), [errors, formData]);
 
   const renderWarehouseSelection = useMemo(() => (
     <View className="mb-6">
@@ -450,71 +380,94 @@ const AddProductPage = () => {
     </View>
   ), [user?.warehouseId]);
 
-  return (
-    <SafeAreaView className="flex-1 bg-gray-50">
-      <StatusBar barStyle="dark-content" />
-
-      {/* Header */}
-      <View className="bg-yellow-500 pt-12 pb-6 px-6 rounded-b-[32px]">
-        <View className="flex-row items-center justify-between">
-          <TouchableOpacity
-            onPress={() => router.back()}
-            className="w-10 h-10 bg-yellow-400 rounded-full items-center justify-center"
-          >
-            <ArrowLeft color="#f9fafb" size={24} />
-          </TouchableOpacity>
-          <Text className="text-white text-lg font-bold">Add New Product</Text>
-          <View className="w-10" />
-        </View>
-      </View>
-
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        className="flex-1"
-        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 24}
-      >
-        <ScrollView
-          className="flex-1 px-6 mb-16"
-          showsVerticalScrollIndicator={false}
-        >
-          {renderImagePicker}
-          {renderProductTypeSelection}
-          {renderFormFields}
-          {renderWarehouseSelection}
-        </ScrollView>
-      </KeyboardAvoidingView>
-
-      {/* Submit Button */}
-      <BlurView
-        intensity={100}
-        tint="light"
-        className="absolute bottom-0 left-0 right-0 border-t border-gray-200"
-      >
-        <View
-          className="px-4 py-4"
-          style={{
-            paddingBottom: Platform.OS === "ios" ? 20 : 12,
+  // Render method
+  const renderContent = () => {
+    if (showSuccess) {
+      return (
+        <SuccessPage
+          title="Product Added Successfully!"
+          message={`${formData.name} has been added to your inventory`}
+          primaryButtonText="Add Another Product"
+          secondaryButtonText="View Products"
+          onPrimaryPress={() => {
+            setShowSuccess(false);
+            setFormData(INITIAL_FORM_STATE);
+            setErrors({});
           }}
-        >
-          <TouchableOpacity
-            onPress={handleSubmit}
-            disabled={loading}
-            className={`py-4 rounded-xl items-center justify-center ${
-              loading ? "bg-yellow-400" : "bg-yellow-500"
-            }`}
-          >
-            {loading ? (
-              <ActivityIndicator color="white" />
-            ) : (
-              <Text className="text-white font-semibold text-lg">
-                Add Product
-              </Text>
-            )}
-          </TouchableOpacity>
+          onSecondaryPress={() => {
+            router.push('/(tabs)/products');
+          }}
+        />
+      );
+    }
+
+    return (
+      <SafeAreaView className="flex-1 bg-gray-50">
+        <StatusBar barStyle="dark-content" />
+
+        {/* Header */}
+        <View className="bg-yellow-500 pt-12 pb-6 px-6 rounded-b-[32px]">
+          <View className="flex-row items-center justify-between">
+            <TouchableOpacity
+              onPress={() => router.back()}
+              className="w-10 h-10 bg-yellow-400 rounded-full items-center justify-center"
+            >
+              <ArrowLeft color="#f9fafb" size={24} />
+            </TouchableOpacity>
+            <Text className="text-white text-lg font-bold">Add New Product</Text>
+            <View className="w-10" />
+          </View>
         </View>
-      </BlurView>
-    </SafeAreaView>
-  );
+
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          className="flex-1"
+          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 24}
+        >
+          <ScrollView
+            className="flex-1 px-6 mb-16"
+            showsVerticalScrollIndicator={false}
+          >
+            {renderImagePicker}
+            {renderProductTypeSelection}
+            {renderFormFields}
+            {renderWarehouseSelection}
+          </ScrollView>
+        </KeyboardAvoidingView>
+
+        {/* Submit Button */}
+        <BlurView
+          intensity={100}
+          tint="light"
+          className="absolute bottom-0 left-0 right-0 border-t border-gray-200"
+        >
+          <View
+            className="px-4 py-4"
+            style={{
+              paddingBottom: Platform.OS === "ios" ? 20 : 12,
+            }}
+          >
+            <TouchableOpacity
+              onPress={handleSubmit}
+              disabled={loading}
+              className={`py-4 rounded-xl items-center justify-center ${loading ? "bg-yellow-400" : "bg-yellow-500"
+                }`}
+            >
+              {loading ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <Text className="text-white font-semibold text-lg">
+                  Add Product
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </BlurView>
+      </SafeAreaView>
+    );
+  };
+
+  return renderContent();
 };
 
 export default AddProductPage;

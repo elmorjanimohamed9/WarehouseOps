@@ -1,12 +1,53 @@
+import React, { useCallback, useEffect, useState } from 'react';
+import { useSelector, useDispatch, shallowEqual } from 'react-redux';
+import { RootState } from '@/store/store';
 import { router } from 'expo-router';
-import React from 'react';
-import { View, Text, Image, TouchableOpacity } from 'react-native';
+import { View, Text, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { ArrowRight, Package, Warehouse } from 'lucide-react-native';
-
+import { getAuthData } from '@/utils/auth';
+import { loginSuccess } from '@/store/slices/authSlice';
 const SplashScreen = () => {
-  const handleGetStarted = () => {
+  const dispatch = useDispatch();
+  const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated, shallowEqual);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const checkAuthStatus = async () => {
+      try {
+        const { user } = await getAuthData();
+        if (isMounted && user) {
+          dispatch(loginSuccess(user));
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    };
+
+    checkAuthStatus();
+    return () => { isMounted = false; };
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      router.replace('/(tabs)/home');
+    }
+  }, [isAuthenticated, isLoading]);
+
+  const handleGetStarted = useCallback(() => {
     router.push('/login');
-  };
+  }, []);
+
+  if (isLoading) {
+    return (
+      <View className="flex-1 bg-gray-50 items-center justify-center">
+        <ActivityIndicator size="large" color="#eab308" />
+      </View>
+    );
+  }
 
   return (
     <View className="flex-1 bg-gray-50">
@@ -67,8 +108,6 @@ const SplashScreen = () => {
             <Text className="text-white font-bold text-lg">Get Started</Text>
             <ArrowRight color="#FFF" size={20} />
           </TouchableOpacity>
-
-          
         </View>
       </View>
     </View>
