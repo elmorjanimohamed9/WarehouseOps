@@ -1,6 +1,6 @@
 # WarehouseOps
 
-![WarehouseOps](assets/images/WarehouseOps.png)
+![WarehouseOps](assets/images/WarehouseOps.jpg)
 
 ## Overview
 
