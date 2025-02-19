@@ -116,7 +116,7 @@ const SettingsScreen = () => {
         icon={User}
         title="Profile Information"
         subtitle="Update your account details"
-        action={() => {}}
+        action={() => router.push('/settings/profile-information')}
       />
       <SettingItem
         icon={Building2}
@@ -150,7 +150,7 @@ const SettingsScreen = () => {
         icon={HelpCircle}
         title="Help & Support"
         subtitle="Get help and contact us"
-        action={() => {}}
+        action={() => router.push('/settings/help-support')}
       />
   
       {/* Logout Button */}
